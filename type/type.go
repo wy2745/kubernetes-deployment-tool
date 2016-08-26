@@ -188,9 +188,9 @@ type ObjectMeta struct {
 
 	Generation int64 `json:"generation,omitempty"`
 
-	CreationTimestamp Time `json:"creationTimestamp,omitempty"`
+	CreationTimestamp string `json:"creationTimestamp,omitempty"`
 
-	DeletionTimestamp Time `json:"deletionTimestamp,omitempty"`
+	DeletionTimestamp *Time `json:"deletionTimestamp,omitempty"`
 
 	DeletionGracePeriodSeconds *int64 `json:"deletionGracePeriodSeconds,omitempty"`
 
@@ -345,7 +345,6 @@ type PersistentVolumeStatus struct {
 	Reason string `json:"reason,omitempty"`
 }
 
-// PersistentVolumeList is a list of PersistentVolume items.
 type PersistentVolumeList struct {
 	TypeMeta `json:",inline"`
 
@@ -444,7 +443,6 @@ type GlusterfsVolumeSource struct {
 type RBDVolumeSource struct {
 	CephMonitors []string `json:"monitors"`
 	RBDImage string `json:"image"`
-	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	FSType string `json:"fsType,omitempty"`
 	RBDPool string `json:"pool"`
 	RadosUser string `json:"user"`
@@ -475,8 +473,8 @@ type FlockerVolumeSource struct {
 type StorageMedium string
 
 const (
-	StorageMediumDefault StorageMedium = ""       // use whatever the default is for the node
-	StorageMediumMemory  StorageMedium = "Memory" // use memory (tmpfs)
+	StorageMediumDefault StorageMedium = ""
+	StorageMediumMemory  StorageMedium = "Memory"
 )
 
 type Protocol string
@@ -503,7 +501,7 @@ type FlexVolumeSource struct {
 
 type AWSElasticBlockStoreVolumeSource struct {
 	VolumeID string `json:"volumeID"`
-	// TODO: how do we prevent errors in the filesystem from compromising the machine
+
 	FSType string `json:"fsType,omitempty"`
 	Partition int32 `json:"partition,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`
@@ -532,7 +530,7 @@ type ISCSIVolumeSource struct {
 	IQN string `json:"iqn"`
 	Lun int32 `json:"lun"`
 	ISCSIInterface string `json:"iscsiInterface,omitempty"`
-	// TODO: how do we prevent errors in the filesystem from compromising the machine
+
 	FSType string `json:"fsType,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`
 }
@@ -655,9 +653,9 @@ const (
 type Capability string
 
 type Capabilities struct {
-	// Added capabilities
+
 	Add []Capability `json:"add,omitempty"`
-	// Removed capabilities
+
 	Drop []Capability `json:"drop,omitempty"`
 }
 
@@ -864,7 +862,7 @@ type PodStatus struct {
 	HostIP string `json:"hostIP,omitempty"`
 	PodIP string `json:"podIP,omitempty"`
 
-	StartTime Time `json:"startTime,omitempty"`
+	StartTime *Time `json:"startTime,omitempty"`
 	ContainerStatuses []ContainerStatus `json:"containerStatuses,omitempty"`
 }
 
@@ -1133,8 +1131,8 @@ const (
 type NodeCondition struct {
 	Type NodeConditionType `json:"type"`
 	Status ConditionStatus `json:"status"`
-	LastHeartbeatTime Time `json:"lastHeartbeatTime,omitempty"`
-	LastTransitionTime Time `json:"lastTransitionTime,omitempty"`
+	LastHeartbeatTime string `json:"lastHeartbeatTime,omitempty"`
+	LastTransitionTime string `json:"lastTransitionTime,omitempty"`
 	Reason string `json:"reason,omitempty"`
 	Message string `json:"message,omitempty"`
 }
@@ -1160,16 +1158,12 @@ const (
 	ResourceStorage ResourceName = "storage"
 )
 type Quantity struct {
-	// Amount is public, so you can manipulate it if the accessor
-	// functions are not sufficient.
 	Amount *inf.Dec
 
-	// Change Format at will. See the comment for Canonicalize for
-	// more details.
 	string
 }
 
-type ResourceList map[ResourceName]Quantity
+type ResourceList map[ResourceName]string
 
 type Node struct {
 	TypeMeta `json:",inline"`
@@ -1236,7 +1230,6 @@ type DeleteOptions struct {
 	GracePeriodSeconds *int64 `json:"gracePeriodSeconds"`
 }
 
-// ExportOptions is the query options to the standard REST get call.
 type ExportOptions struct {
 	TypeMeta `json:",inline"`
 
@@ -1261,7 +1254,7 @@ type PodLogOptions struct {
 	Follow bool `json:"follow,omitempty"`
 	Previous bool `json:"previous,omitempty"`
 	SinceSeconds *int64 `json:"sinceSeconds,omitempty"`
-	SinceTime Time `json:"sinceTime,omitempty"`
+	SinceTime *Time `json:"sinceTime,omitempty"`
 	Timestamps bool `json:"timestamps,omitempty"`
 	TailLines *int64 `json:"tailLines,omitempty"`
 	LimitBytes *int64 `json:"limitBytes,omitempty"`
@@ -1372,11 +1365,7 @@ type EventList struct {
 
 	Items []Event `json:"items"`
 }
-type GroupVersionKind struct {
-	Group   string
-	Version string
-	Kind    string
-}
+
 type GroupVersionKind struct {
 	Group   string
 	Version string

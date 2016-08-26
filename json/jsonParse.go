@@ -12,8 +12,8 @@ func JsonNewDecoder(body []byte) *json.Decoder{
 
 }
 
-func JsonUnmarsha(body []byte) classType.Node{
-	var v classType.Node
+func JsonUnmarsha(body []byte) classType.NodeList{
+	var v classType.NodeList
 	if err := json.Unmarshal(body, &v); err != nil {
 		fmt.Println(err)
 		return v

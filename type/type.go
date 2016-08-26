@@ -1,7 +1,7 @@
 package classType
 
 import (
-	"speter.net/go/exp/math/dec/inf"
+	"gopkg.in/inf.v0"
 )
 
 
@@ -1159,8 +1159,17 @@ const (
 	ResourceMemory ResourceName = "memory"
 	ResourceStorage ResourceName = "storage"
 )
+type Quantity struct {
+	// Amount is public, so you can manipulate it if the accessor
+	// functions are not sufficient.
+	Amount *inf.Dec
 
-type ResourceList map[ResourceName]resource.Quantity
+	// Change Format at will. See the comment for Canonicalize for
+	// more details.
+	string
+}
+
+type ResourceList map[ResourceName]Quantity
 
 type Node struct {
 	TypeMeta `json:",inline"`

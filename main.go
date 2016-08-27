@@ -26,7 +26,7 @@ func main() {
 	//	return
 	//}
 	//fmt.Print(objs)
-	Request.GetRequest("http://202.120.40.177:16380/api/v1/nodes","")
+	Request.GetAllNamespace()
 
 }
 

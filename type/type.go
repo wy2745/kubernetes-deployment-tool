@@ -2,6 +2,7 @@ package classType
 
 import (
 	"gopkg.in/inf.v0"
+	"fmt"
 )
 
 
@@ -83,20 +84,20 @@ import (
 
 
 type zone struct {
-	name   string // abbreviated name, "CET"
-	offset int    // seconds east of UTC
-	isDST  bool   // is this zone Daylight Savings Time?
+	name   string
+	offset int
+	isDST  bool
 }
 
 type zoneTrans struct {
-	when         int64 // transition time, in seconds since 1970 GMT
-	index        uint8 // the index of the zone that goes into effect at that time
-	isstd, isutc bool  // ignored - no idea what these mean
+	when         int64
+	index        uint8
+	isstd, isutc bool
 }
 type Location struct {
-	name string
-	zone []zone
-	tx   []zoneTrans
+	name       string
+	zone       []zone
+	tx         []zoneTrans
 
 	// Most lookups will be for the current time.
 	// To avoid the binary search through tx, keep a
@@ -114,7 +115,7 @@ type Location struct {
 type Time struct {
 	// sec gives the number of seconds elapsed since
 	// January 1, year 1 00:00:00 UTC.
-	sec int64
+	sec  int64
 
 	// nsec specifies a non-negative nanosecond
 	// offset within the second named by Seconds.
@@ -126,7 +127,7 @@ type Time struct {
 	// that correspond to this Time.
 	// Only the zero Time has a nil Location.
 	// In that case it is interpreted to mean UTC.
-	loc *Location
+	loc  *Location
 }
 
 
@@ -172,31 +173,29 @@ type Time struct {
 // ObjectMeta is metadata that all persisted resources must have, which includes all objects
 // users must create.
 type ObjectMeta struct {
+	Name                       string `json:"name,omitempty"`
 
-	Name string `json:"name,omitempty"`
+	GenerateName               string `json:"generateName,omitempty"`
 
+	Namespace                  string `json:"namespace,omitempty"`
 
-	GenerateName string `json:"generateName,omitempty"`
+	SelfLink                   string `json:"selfLink,omitempty"`
 
-	Namespace string `json:"namespace,omitempty"`
+	UID                        string `json:"uid,omitempty"`
 
-	SelfLink string `json:"selfLink,omitempty"`
+	ResourceVersion            string `json:"resourceVersion,omitempty"`
 
-	UID string `json:"uid,omitempty"`
+	Generation                 int64 `json:"generation,omitempty"`
 
-	ResourceVersion string `json:"resourceVersion,omitempty"`
+	CreationTimestamp          string `json:"creationTimestamp,omitempty"`
 
-	Generation int64 `json:"generation,omitempty"`
-
-	CreationTimestamp string `json:"creationTimestamp,omitempty"`
-
-	DeletionTimestamp *Time `json:"deletionTimestamp,omitempty"`
+	DeletionTimestamp          *Time `json:"deletionTimestamp,omitempty"`
 
 	DeletionGracePeriodSeconds *int64 `json:"deletionGracePeriodSeconds,omitempty"`
 
-	Labels map[string]string `json:"labels,omitempty"`
+	Labels                     map[string]string `json:"labels,omitempty"`
 
-	Annotations map[string]string `json:"annotations,omitempty"`
+	Annotations                map[string]string `json:"annotations,omitempty"`
 }
 
 const (
@@ -204,97 +203,87 @@ const (
 	NamespaceAll string = ""
 )
 
-
 type Volume struct {
-
 	Name string `json:"name"`
 
 	VolumeSource `json:",inline"`
 }
 
-
 type VolumeSource struct {
+	HostPath              *HostPathVolumeSource `json:"hostPath,omitempty"`
 
-	HostPath *HostPathVolumeSource `json:"hostPath,omitempty"`
+	EmptyDir              *EmptyDirVolumeSource `json:"emptyDir,omitempty"`
 
-	EmptyDir *EmptyDirVolumeSource `json:"emptyDir,omitempty"`
+	GCEPersistentDisk     *GCEPersistentDiskVolumeSource `json:"gcePersistentDisk,omitempty"`
 
-	GCEPersistentDisk *GCEPersistentDiskVolumeSource `json:"gcePersistentDisk,omitempty"`
+	AWSElasticBlockStore  *AWSElasticBlockStoreVolumeSource `json:"awsElasticBlockStore,omitempty"`
 
-	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource `json:"awsElasticBlockStore,omitempty"`
+	GitRepo               *GitRepoVolumeSource `json:"gitRepo,omitempty"`
 
-	GitRepo *GitRepoVolumeSource `json:"gitRepo,omitempty"`
+	Secret                *SecretVolumeSource `json:"secret,omitempty"`
 
-	Secret *SecretVolumeSource `json:"secret,omitempty"`
+	NFS                   *NFSVolumeSource `json:"nfs,omitempty"`
 
-	NFS *NFSVolumeSource `json:"nfs,omitempty"`
+	ISCSI                 *ISCSIVolumeSource `json:"iscsi,omitempty"`
 
-	ISCSI *ISCSIVolumeSource `json:"iscsi,omitempty"`
-
-	Glusterfs *GlusterfsVolumeSource `json:"glusterfs,omitempty"`
+	Glusterfs             *GlusterfsVolumeSource `json:"glusterfs,omitempty"`
 
 	PersistentVolumeClaim *PersistentVolumeClaimVolumeSource `json:"persistentVolumeClaim,omitempty"`
 
-	RBD *RBDVolumeSource `json:"rbd,omitempty"`
+	RBD                   *RBDVolumeSource `json:"rbd,omitempty"`
 
+	FlexVolume            *FlexVolumeSource `json:"flexVolume,omitempty"`
 
-	FlexVolume *FlexVolumeSource `json:"flexVolume,omitempty"`
+	Cinder                *CinderVolumeSource `json:"cinder,omitempty"`
 
-	Cinder *CinderVolumeSource `json:"cinder,omitempty"`
+	CephFS                *CephFSVolumeSource `json:"cephfs,omitempty"`
 
-	CephFS *CephFSVolumeSource `json:"cephfs,omitempty"`
+	Flocker               *FlockerVolumeSource `json:"flocker,omitempty"`
 
-	Flocker *FlockerVolumeSource `json:"flocker,omitempty"`
-
-	DownwardAPI *DownwardAPIVolumeSource `json:"downwardAPI,omitempty"`
-	FC *FCVolumeSource `json:"fc,omitempty"`
-	AzureFile *AzureFileVolumeSource `json:"azureFile,omitempty"`
-	ConfigMap *ConfigMapVolumeSource `json:"configMap,omitempty"`
+	DownwardAPI           *DownwardAPIVolumeSource `json:"downwardAPI,omitempty"`
+	FC                    *FCVolumeSource `json:"fc,omitempty"`
+	AzureFile             *AzureFileVolumeSource `json:"azureFile,omitempty"`
+	ConfigMap             *ConfigMapVolumeSource `json:"configMap,omitempty"`
 }
 
 type PersistentVolumeClaimVolumeSource struct {
 	ClaimName string `json:"claimName"`
 
-	ReadOnly bool `json:"readOnly,omitempty"`
+	ReadOnly  bool `json:"readOnly,omitempty"`
 }
 
-
 type PersistentVolumeSource struct {
-
-	GCEPersistentDisk *GCEPersistentDiskVolumeSource `json:"gcePersistentDisk,omitempty"`
+	GCEPersistentDisk    *GCEPersistentDiskVolumeSource `json:"gcePersistentDisk,omitempty"`
 
 	AWSElasticBlockStore *AWSElasticBlockStoreVolumeSource `json:"awsElasticBlockStore,omitempty"`
 
-	HostPath *HostPathVolumeSource `json:"hostPath,omitempty"`
+	HostPath             *HostPathVolumeSource `json:"hostPath,omitempty"`
 
-	Glusterfs *GlusterfsVolumeSource `json:"glusterfs,omitempty"`
+	Glusterfs            *GlusterfsVolumeSource `json:"glusterfs,omitempty"`
 
-	NFS *NFSVolumeSource `json:"nfs,omitempty"`
+	NFS                  *NFSVolumeSource `json:"nfs,omitempty"`
 
-	RBD *RBDVolumeSource `json:"rbd,omitempty"`
+	RBD                  *RBDVolumeSource `json:"rbd,omitempty"`
 
-	ISCSI *ISCSIVolumeSource `json:"iscsi,omitempty"`
+	ISCSI                *ISCSIVolumeSource `json:"iscsi,omitempty"`
 
-	Cinder *CinderVolumeSource `json:"cinder,omitempty"`
+	Cinder               *CinderVolumeSource `json:"cinder,omitempty"`
 
-	CephFS *CephFSVolumeSource `json:"cephfs,omitempty"`
+	CephFS               *CephFSVolumeSource `json:"cephfs,omitempty"`
 
-	FC *FCVolumeSource `json:"fc,omitempty"`
-	Flocker *FlockerVolumeSource `json:"flocker,omitempty"`
-	FlexVolume *FlexVolumeSource `json:"flexVolume,omitempty"`
-	AzureFile *AzureFileVolumeSource `json:"azureFile,omitempty"`
+	FC                   *FCVolumeSource `json:"fc,omitempty"`
+	Flocker              *FlockerVolumeSource `json:"flocker,omitempty"`
+	FlexVolume           *FlexVolumeSource `json:"flexVolume,omitempty"`
+	AzureFile            *AzureFileVolumeSource `json:"azureFile,omitempty"`
 }
 
 type TypeMeta struct {
-
-	Kind string `json:"kind,omitempty"`
+	Kind       string `json:"kind,omitempty"`
 
 	APIVersion string `json:"apiVersion,omitempty"`
 }
 type ListMeta struct {
-
-	SelfLink string `json:"selfLink,omitempty"`
-
+	SelfLink        string `json:"selfLink,omitempty"`
 
 	ResourceVersion string `json:"resourceVersion,omitempty"`
 }
@@ -303,31 +292,26 @@ type PersistentVolume struct {
 
 	ObjectMeta `json:"metadata,omitempty"`
 
-
-	Spec PersistentVolumeSpec `json:"spec,omitempty"`
+	Spec   PersistentVolumeSpec `json:"spec,omitempty"`
 
 	Status PersistentVolumeStatus `json:"status,omitempty"`
 }
 
-
 type PersistentVolumeSpec struct {
-
-	Capacity ResourceList `json:"capacity,omitempty"`
+	Capacity                      ResourceList `json:"capacity,omitempty"`
 
 	PersistentVolumeSource `json:",inline"`
 
-	AccessModes []PersistentVolumeAccessMode `json:"accessModes,omitempty"`
+	AccessModes                   []PersistentVolumeAccessMode `json:"accessModes,omitempty"`
 
-	ClaimRef *ObjectReference `json:"claimRef,omitempty"`
+	ClaimRef                      *ObjectReference `json:"claimRef,omitempty"`
 
 	PersistentVolumeReclaimPolicy PersistentVolumeReclaimPolicy `json:"persistentVolumeReclaimPolicy,omitempty"`
 }
 
-
 type PersistentVolumeReclaimPolicy string
 
 const (
-
 	PersistentVolumeReclaimRecycle PersistentVolumeReclaimPolicy = "Recycle"
 
 	PersistentVolumeReclaimDelete PersistentVolumeReclaimPolicy = "Delete"
@@ -335,14 +319,12 @@ const (
 	PersistentVolumeReclaimRetain PersistentVolumeReclaimPolicy = "Retain"
 )
 
-
 type PersistentVolumeStatus struct {
-
-	Phase PersistentVolumePhase `json:"phase,omitempty"`
+	Phase   PersistentVolumePhase `json:"phase,omitempty"`
 
 	Message string `json:"message,omitempty"`
 
-	Reason string `json:"reason,omitempty"`
+	Reason  string `json:"reason,omitempty"`
 }
 
 type PersistentVolumeList struct {
@@ -353,13 +335,12 @@ type PersistentVolumeList struct {
 	Items []PersistentVolume `json:"items"`
 }
 
-
 type PersistentVolumeClaim struct {
 	TypeMeta `json:",inline"`
 
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec PersistentVolumeClaimSpec `json:"spec,omitempty"`
+	Spec   PersistentVolumeClaimSpec `json:"spec,omitempty"`
 
 	Status PersistentVolumeClaimStatus `json:"status,omitempty"`
 }
@@ -373,28 +354,24 @@ type PersistentVolumeClaimList struct {
 }
 
 type PersistentVolumeClaimSpec struct {
-
 	AccessModes []PersistentVolumeAccessMode `json:"accessModes,omitempty"`
 
-	Resources ResourceRequirements `json:"resources,omitempty"`
+	Resources   ResourceRequirements `json:"resources,omitempty"`
 
-	VolumeName string `json:"volumeName,omitempty"`
+	VolumeName  string `json:"volumeName,omitempty"`
 }
 
-
 type PersistentVolumeClaimStatus struct {
-
-	Phase PersistentVolumeClaimPhase `json:"phase,omitempty"`
+	Phase       PersistentVolumeClaimPhase `json:"phase,omitempty"`
 
 	AccessModes []PersistentVolumeAccessMode `json:"accessModes,omitempty"`
 
-	Capacity ResourceList `json:"capacity,omitempty"`
+	Capacity    ResourceList `json:"capacity,omitempty"`
 }
 
 type PersistentVolumeAccessMode string
 
 const (
-
 	ReadWriteOnce PersistentVolumeAccessMode = "ReadWriteOnce"
 
 	ReadOnlyMany PersistentVolumeAccessMode = "ReadOnlyMany"
@@ -405,7 +382,6 @@ const (
 type PersistentVolumePhase string
 
 const (
-
 	VolumePending PersistentVolumePhase = "Pending"
 
 	VolumeAvailable PersistentVolumePhase = "Available"
@@ -435,35 +411,35 @@ type EmptyDirVolumeSource struct {
 type GlusterfsVolumeSource struct {
 	EndpointsName string `json:"endpoints"`
 
-	Path string `json:"path"`
+	Path          string `json:"path"`
 
-	ReadOnly bool `json:"readOnly,omitempty"`
+	ReadOnly      bool `json:"readOnly,omitempty"`
 }
 
 type RBDVolumeSource struct {
 	CephMonitors []string `json:"monitors"`
-	RBDImage string `json:"image"`
-	FSType string `json:"fsType,omitempty"`
-	RBDPool string `json:"pool"`
-	RadosUser string `json:"user"`
-	Keyring string `json:"keyring"`
-	SecretRef *LocalObjectReference `json:"secretRef"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	RBDImage     string `json:"image"`
+	FSType       string `json:"fsType,omitempty"`
+	RBDPool      string `json:"pool"`
+	RadosUser    string `json:"user"`
+	Keyring      string `json:"keyring"`
+	SecretRef    *LocalObjectReference `json:"secretRef"`
+	ReadOnly     bool `json:"readOnly,omitempty"`
 }
 
 type CinderVolumeSource struct {
 	VolumeID string `json:"volumeID"`
-	FSType string `json:"fsType,omitempty"`
+	FSType   string `json:"fsType,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`
 }
 
 type CephFSVolumeSource struct {
-	Monitors []string `json:"monitors"`
-	Path string `json:"path,omitempty"`
-	User string `json:"user,omitempty"`
+	Monitors   []string `json:"monitors"`
+	Path       string `json:"path,omitempty"`
+	User       string `json:"user,omitempty"`
 	SecretFile string `json:"secretFile,omitempty"`
-	SecretRef *LocalObjectReference `json:"secretRef,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	SecretRef  *LocalObjectReference `json:"secretRef,omitempty"`
+	ReadOnly   bool `json:"readOnly,omitempty"`
 }
 
 type FlockerVolumeSource struct {
@@ -474,7 +450,7 @@ type StorageMedium string
 
 const (
 	StorageMediumDefault StorageMedium = ""
-	StorageMediumMemory  StorageMedium = "Memory"
+	StorageMediumMemory StorageMedium = "Memory"
 )
 
 type Protocol string
@@ -485,32 +461,32 @@ const (
 )
 
 type GCEPersistentDiskVolumeSource struct {
-	PDName string `json:"pdName"`
-	FSType string `json:"fsType,omitempty"`
+	PDName    string `json:"pdName"`
+	FSType    string `json:"fsType,omitempty"`
 	Partition int32 `json:"partition,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	ReadOnly  bool `json:"readOnly,omitempty"`
 }
 
 type FlexVolumeSource struct {
-	Driver string `json:"driver"`
-	FSType string `json:"fsType,omitempty"`
+	Driver    string `json:"driver"`
+	FSType    string `json:"fsType,omitempty"`
 	SecretRef *LocalObjectReference `json:"secretRef,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
-	Options map[string]string `json:"options,omitempty"`
+	ReadOnly  bool `json:"readOnly,omitempty"`
+	Options   map[string]string `json:"options,omitempty"`
 }
 
 type AWSElasticBlockStoreVolumeSource struct {
-	VolumeID string `json:"volumeID"`
+	VolumeID  string `json:"volumeID"`
 
-	FSType string `json:"fsType,omitempty"`
+	FSType    string `json:"fsType,omitempty"`
 	Partition int32 `json:"partition,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	ReadOnly  bool `json:"readOnly,omitempty"`
 }
 
 type GitRepoVolumeSource struct {
 	Repository string `json:"repository"`
-	Revision string `json:"revision,omitempty"`
-	Directory string `json:"directory,omitempty"`
+	Revision   string `json:"revision,omitempty"`
+	Directory  string `json:"directory,omitempty"`
 }
 
 type SecretVolumeSource struct {
@@ -518,34 +494,34 @@ type SecretVolumeSource struct {
 }
 
 type NFSVolumeSource struct {
-	Server string `json:"server"`
+	Server   string `json:"server"`
 
-	Path string `json:"path"`
+	Path     string `json:"path"`
 
 	ReadOnly bool `json:"readOnly,omitempty"`
 }
 
 type ISCSIVolumeSource struct {
-	TargetPortal string `json:"targetPortal"`
-	IQN string `json:"iqn"`
-	Lun int32 `json:"lun"`
+	TargetPortal   string `json:"targetPortal"`
+	IQN            string `json:"iqn"`
+	Lun            int32 `json:"lun"`
 	ISCSIInterface string `json:"iscsiInterface,omitempty"`
 
-	FSType string `json:"fsType,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	FSType         string `json:"fsType,omitempty"`
+	ReadOnly       bool `json:"readOnly,omitempty"`
 }
 
 type FCVolumeSource struct {
 	TargetWWNs []string `json:"targetWWNs"`
-	Lun *int32 `json:"lun"`
-	FSType string `json:"fsType,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	Lun        *int32 `json:"lun"`
+	FSType     string `json:"fsType,omitempty"`
+	ReadOnly   bool `json:"readOnly,omitempty"`
 }
 
 type AzureFileVolumeSource struct {
 	SecretName string `json:"secretName"`
-	ShareName string `json:"shareName"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	ShareName  string `json:"shareName"`
+	ReadOnly   bool `json:"readOnly,omitempty"`
 }
 
 type ConfigMapVolumeSource struct {
@@ -554,40 +530,40 @@ type ConfigMapVolumeSource struct {
 }
 
 type KeyToPath struct {
-	Key string `json:"key"`
+	Key  string `json:"key"`
 
 	Path string `json:"path"`
 }
 
 type ContainerPort struct {
-	Name string `json:"name,omitempty"`
-	HostPort int32 `json:"hostPort,omitempty"`
+	Name          string `json:"name,omitempty"`
+	HostPort      int32 `json:"hostPort,omitempty"`
 	ContainerPort int32 `json:"containerPort"`
-	Protocol Protocol `json:"protocol,omitempty"`
-	HostIP string `json:"hostIP,omitempty"`
+	Protocol      Protocol `json:"protocol,omitempty"`
+	HostIP        string `json:"hostIP,omitempty"`
 }
 
 type VolumeMount struct {
-	Name string `json:"name"`
-	ReadOnly bool `json:"readOnly,omitempty"`
+	Name      string `json:"name"`
+	ReadOnly  bool `json:"readOnly,omitempty"`
 	MountPath string `json:"mountPath"`
 }
 
 type EnvVar struct {
-	Name string `json:"name"`
-	Value string `json:"value,omitempty"`
+	Name      string `json:"name"`
+	Value     string `json:"value,omitempty"`
 	ValueFrom *EnvVarSource `json:"valueFrom,omitempty"`
 }
 
 type EnvVarSource struct {
-	FieldRef *ObjectFieldSelector `json:"fieldRef,omitempty"`
+	FieldRef        *ObjectFieldSelector `json:"fieldRef,omitempty"`
 	ConfigMapKeyRef *ConfigMapKeySelector `json:"configMapKeyRef,omitempty"`
-	SecretKeyRef *SecretKeySelector `json:"secretKeyRef,omitempty"`
+	SecretKeyRef    *SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
 type ObjectFieldSelector struct {
 	APIVersion string `json:"apiVersion,omitempty"`
-	FieldPath string `json:"fieldPath"`
+	FieldPath  string `json:"fieldPath"`
 }
 
 type ConfigMapKeySelector struct {
@@ -601,7 +577,7 @@ type SecretKeySelector struct {
 }
 
 type HTTPHeader struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 type IntOrString struct {
@@ -611,10 +587,10 @@ type IntOrString struct {
 }
 
 type HTTPGetAction struct {
-	Path string `json:"path,omitempty"`
-	Port IntOrString `json:"port"`
-	Host string `json:"host,omitempty"`
-	Scheme URIScheme `json:"scheme,omitempty"`
+	Path        string `json:"path,omitempty"`
+	Port        IntOrString `json:"port"`
+	Host        string `json:"host,omitempty"`
+	Scheme      URIScheme `json:"scheme,omitempty"`
 	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
@@ -636,10 +612,10 @@ type ExecAction struct {
 type Probe struct {
 	Handler `json:",inline"`
 	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty"`
-	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty"`
-	PeriodSeconds int32 `json:"periodSeconds,omitempty"`
-	SuccessThreshold int32 `json:"successThreshold,omitempty"`
-	FailureThreshold int32 `json:"failureThreshold,omitempty"`
+	TimeoutSeconds      int32 `json:"timeoutSeconds,omitempty"`
+	PeriodSeconds       int32 `json:"periodSeconds,omitempty"`
+	SuccessThreshold    int32 `json:"successThreshold,omitempty"`
+	FailureThreshold    int32 `json:"failureThreshold,omitempty"`
 }
 
 type PullPolicy string
@@ -653,14 +629,13 @@ const (
 type Capability string
 
 type Capabilities struct {
-
-	Add []Capability `json:"add,omitempty"`
+	Add  []Capability `json:"add,omitempty"`
 
 	Drop []Capability `json:"drop,omitempty"`
 }
 
 type ResourceRequirements struct {
-	Limits ResourceList `json:"limits,omitempty"`
+	Limits   ResourceList `json:"limits,omitempty"`
 	Requests ResourceList `json:"requests,omitempty"`
 }
 
@@ -669,47 +644,47 @@ const (
 )
 
 type Container struct {
-	Name string `json:"name"`
-	Image string `json:"image,omitempty"`
-	Command []string `json:"command,omitempty"`
-	Args []string `json:"args,omitempty"`
-	WorkingDir string `json:"workingDir,omitempty"`
-	Ports []ContainerPort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"containerPort"`
-	Env []EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
-	Resources ResourceRequirements `json:"resources,omitempty"`
-	VolumeMounts []VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
-	LivenessProbe *Probe `json:"livenessProbe,omitempty"`
-	ReadinessProbe *Probe `json:"readinessProbe,omitempty"`
-	Lifecycle *Lifecycle `json:"lifecycle,omitempty"`
+	Name                   string `json:"name"`
+	Image                  string `json:"image,omitempty"`
+	Command                []string `json:"command,omitempty"`
+	Args                   []string `json:"args,omitempty"`
+	WorkingDir             string `json:"workingDir,omitempty"`
+	Ports                  []ContainerPort `json:"ports,omitempty" patchStrategy:"merge" patchMergeKey:"containerPort"`
+	Env                    []EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	Resources              ResourceRequirements `json:"resources,omitempty"`
+	VolumeMounts           []VolumeMount `json:"volumeMounts,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	LivenessProbe          *Probe `json:"livenessProbe,omitempty"`
+	ReadinessProbe         *Probe `json:"readinessProbe,omitempty"`
+	Lifecycle              *Lifecycle `json:"lifecycle,omitempty"`
 	TerminationMessagePath string `json:"terminationMessagePath,omitempty"`
-	ImagePullPolicy PullPolicy `json:"imagePullPolicy,omitempty"`
-	SecurityContext *SecurityContext `json:"securityContext,omitempty"`
-	Stdin bool `json:"stdin,omitempty"`
-	StdinOnce bool `json:"stdinOnce,omitempty"`
-	TTY bool `json:"tty,omitempty"`
+	ImagePullPolicy        PullPolicy `json:"imagePullPolicy,omitempty"`
+	SecurityContext        *SecurityContext `json:"securityContext,omitempty"`
+	Stdin                  bool `json:"stdin,omitempty"`
+	StdinOnce              bool `json:"stdinOnce,omitempty"`
+	TTY                    bool `json:"tty,omitempty"`
 }
 
 type Handler struct {
-	Exec *ExecAction `json:"exec,omitempty"`
-	HTTPGet *HTTPGetAction `json:"httpGet,omitempty"`
+	Exec      *ExecAction `json:"exec,omitempty"`
+	HTTPGet   *HTTPGetAction `json:"httpGet,omitempty"`
 	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty"`
 }
 
 type Lifecycle struct {
 	PostStart *Handler `json:"postStart,omitempty"`
-	PreStop *Handler `json:"preStop,omitempty"`
+	PreStop   *Handler `json:"preStop,omitempty"`
 }
 
 type ConditionStatus string
 
 const (
-	ConditionTrue    ConditionStatus = "True"
-	ConditionFalse   ConditionStatus = "False"
+	ConditionTrue ConditionStatus = "True"
+	ConditionFalse ConditionStatus = "False"
 	ConditionUnknown ConditionStatus = "Unknown"
 )
 
 type ContainerStateWaiting struct {
-	Reason string `json:"reason,omitempty"`
+	Reason  string `json:"reason,omitempty"`
 	Message string `json:"message,omitempty"`
 }
 
@@ -718,30 +693,30 @@ type ContainerStateRunning struct {
 }
 
 type ContainerStateTerminated struct {
-	ExitCode int32 `json:"exitCode"`
-	Signal int32 `json:"signal,omitempty"`
-	Reason string `json:"reason,omitempty"`
-	Message string `json:"message,omitempty"`
-	StartedAt Time `json:"startedAt,omitempty"`
-	FinishedAt Time `json:"finishedAt,omitempty"`
+	ExitCode    int32 `json:"exitCode"`
+	Signal      int32 `json:"signal,omitempty"`
+	Reason      string `json:"reason,omitempty"`
+	Message     string `json:"message,omitempty"`
+	StartedAt   Time `json:"startedAt,omitempty"`
+	FinishedAt  Time `json:"finishedAt,omitempty"`
 	ContainerID string `json:"containerID,omitempty"`
 }
 
 type ContainerState struct {
-	Waiting *ContainerStateWaiting `json:"waiting,omitempty"`
-	Running *ContainerStateRunning `json:"running,omitempty"`
+	Waiting    *ContainerStateWaiting `json:"waiting,omitempty"`
+	Running    *ContainerStateRunning `json:"running,omitempty"`
 	Terminated *ContainerStateTerminated `json:"terminated,omitempty"`
 }
 
 type ContainerStatus struct {
-	Name string `json:"name"`
-	State ContainerState `json:"state,omitempty"`
+	Name                 string `json:"name"`
+	State                ContainerState `json:"state,omitempty"`
 	LastTerminationState ContainerState `json:"lastState,omitempty"`
-	Ready bool `json:"ready"`
-	RestartCount int32 `json:"restartCount"`
-	Image string `json:"image"`
-	ImageID string `json:"imageID"`
-	ContainerID string `json:"containerID,omitempty"`
+	Ready                bool `json:"ready"`
+	RestartCount         int32 `json:"restartCount"`
+	Image                string `json:"image"`
+	ImageID              string `json:"imageID"`
+	ContainerID          string `json:"containerID,omitempty"`
 }
 
 type PodPhase string
@@ -761,20 +736,20 @@ const (
 )
 
 type PodCondition struct {
-	Type PodConditionType `json:"type"`
-	Status ConditionStatus `json:"status"`
-	LastProbeTime Time `json:"lastProbeTime,omitempty"`
+	Type               PodConditionType `json:"type"`
+	Status             ConditionStatus `json:"status"`
+	LastProbeTime      Time `json:"lastProbeTime,omitempty"`
 	LastTransitionTime Time `json:"lastTransitionTime,omitempty"`
-	Reason string `json:"reason,omitempty"`
-	Message string `json:"message,omitempty"`
+	Reason             string `json:"reason,omitempty"`
+	Message            string `json:"message,omitempty"`
 }
 
 type RestartPolicy string
 
 const (
-	RestartPolicyAlways    RestartPolicy = "Always"
+	RestartPolicyAlways RestartPolicy = "Always"
 	RestartPolicyOnFailure RestartPolicy = "OnFailure"
-	RestartPolicyNever     RestartPolicy = "Never"
+	RestartPolicyNever RestartPolicy = "Never"
 )
 
 type DNSPolicy string
@@ -796,20 +771,20 @@ type NodeSelectorTerm struct {
 }
 
 type NodeSelectorRequirement struct {
-	Key string `json:"key" patchStrategy:"merge" patchMergeKey:"key"`
+	Key      string `json:"key" patchStrategy:"merge" patchMergeKey:"key"`
 	Operator NodeSelectorOperator `json:"operator"`
-	Values []string `json:"values,omitempty"`
+	Values   []string `json:"values,omitempty"`
 }
 
 type NodeSelectorOperator string
 
 const (
-	NodeSelectorOpIn           NodeSelectorOperator = "In"
-	NodeSelectorOpNotIn        NodeSelectorOperator = "NotIn"
-	NodeSelectorOpExists       NodeSelectorOperator = "Exists"
+	NodeSelectorOpIn NodeSelectorOperator = "In"
+	NodeSelectorOpNotIn NodeSelectorOperator = "NotIn"
+	NodeSelectorOpExists NodeSelectorOperator = "Exists"
 	NodeSelectorOpDoesNotExist NodeSelectorOperator = "DoesNotExist"
-	NodeSelectorOpGt           NodeSelectorOperator = "Gt"
-	NodeSelectorOpLt           NodeSelectorOperator = "Lt"
+	NodeSelectorOpGt NodeSelectorOperator = "Gt"
+	NodeSelectorOpLt NodeSelectorOperator = "Lt"
 )
 
 type Affinity struct {
@@ -817,52 +792,51 @@ type Affinity struct {
 }
 
 type NodeAffinity struct {
-	RequiredDuringSchedulingIgnoredDuringExecution *NodeSelector `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty"`
+	RequiredDuringSchedulingIgnoredDuringExecution  *NodeSelector `json:"requiredDuringSchedulingIgnoredDuringExecution,omitempty"`
 	PreferredDuringSchedulingIgnoredDuringExecution []PreferredSchedulingTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,omitempty"`
 }
 
-
 type PreferredSchedulingTerm struct {
-	Weight int `json:"weight"`
+	Weight     int `json:"weight"`
 	Preference NodeSelectorTerm `json:"preference"`
 }
 
 type PodSpec struct {
-	Volumes []Volume `json:"volumes,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
-	Containers []Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name"`
-	RestartPolicy RestartPolicy `json:"restartPolicy,omitempty"`
+	Volumes                       []Volume `json:"volumes,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	Containers                    []Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name"`
+	RestartPolicy                 RestartPolicy `json:"restartPolicy,omitempty"`
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
-	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty"`
-	DNSPolicy DNSPolicy `json:"dnsPolicy,omitempty"`
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
-	ServiceAccountName string `json:"serviceAccountName,omitempty"`
-	DeprecatedServiceAccount string `json:"serviceAccount,omitempty"`
-	NodeName string `json:"nodeName,omitempty"`
-	HostNetwork bool `json:"hostNetwork,omitempty"`
-	HostPID bool `json:"hostPID,omitempty"`
-	HostIPC bool `json:"hostIPC,omitempty"`
-	SecurityContext *PodSecurityContext `json:"securityContext,omitempty"`
-	ImagePullSecrets []LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	ActiveDeadlineSeconds         *int64 `json:"activeDeadlineSeconds,omitempty"`
+	DNSPolicy                     DNSPolicy `json:"dnsPolicy,omitempty"`
+	NodeSelector                  map[string]string `json:"nodeSelector,omitempty"`
+	ServiceAccountName            string `json:"serviceAccountName,omitempty"`
+	DeprecatedServiceAccount      string `json:"serviceAccount,omitempty"`
+	NodeName                      string `json:"nodeName,omitempty"`
+	HostNetwork                   bool `json:"hostNetwork,omitempty"`
+	HostPID                       bool `json:"hostPID,omitempty"`
+	HostIPC                       bool `json:"hostIPC,omitempty"`
+	SecurityContext               *PodSecurityContext `json:"securityContext,omitempty"`
+	ImagePullSecrets              []LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 }
 
 type PodSecurityContext struct {
-	SELinuxOptions *SELinuxOptions `json:"seLinuxOptions,omitempty"`
-	RunAsUser *int64 `json:"runAsUser,omitempty"`
-	RunAsNonRoot *bool `json:"runAsNonRoot,omitempty"`
+	SELinuxOptions     *SELinuxOptions `json:"seLinuxOptions,omitempty"`
+	RunAsUser          *int64 `json:"runAsUser,omitempty"`
+	RunAsNonRoot       *bool `json:"runAsNonRoot,omitempty"`
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
-	FSGroup *int64 `json:"fsGroup,omitempty"`
+	FSGroup            *int64 `json:"fsGroup,omitempty"`
 }
 
 type PodStatus struct {
-	Phase PodPhase `json:"phase,omitempty"`
-	Conditions []PodCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
-	Message string `json:"message,omitempty"`
-	Reason string `json:"reason,omitempty"`
+	Phase             PodPhase `json:"phase,omitempty"`
+	Conditions        []PodCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	Message           string `json:"message,omitempty"`
+	Reason            string `json:"reason,omitempty"`
 
-	HostIP string `json:"hostIP,omitempty"`
-	PodIP string `json:"podIP,omitempty"`
+	HostIP            string `json:"hostIP,omitempty"`
+	PodIP             string `json:"podIP,omitempty"`
 
-	StartTime *Time `json:"startTime,omitempty"`
+	StartTime         *Time `json:"startTime,omitempty"`
 	ContainerStatuses []ContainerStatus `json:"containerStatuses,omitempty"`
 }
 
@@ -876,7 +850,7 @@ type Pod struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec PodSpec `json:"spec,omitempty"`
+	Spec   PodSpec `json:"spec,omitempty"`
 
 	Status PodStatus `json:"status,omitempty"`
 }
@@ -915,7 +889,7 @@ type ReplicationControllerSpec struct {
 }
 
 type ReplicationControllerStatus struct {
-	Replicas int32 `json:"replicas"`
+	Replicas           int32 `json:"replicas"`
 
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
@@ -924,7 +898,7 @@ type ReplicationController struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ReplicationControllerSpec `json:"spec,omitempty"`
+	Spec   ReplicationControllerSpec `json:"spec,omitempty"`
 
 	Status ReplicationControllerStatus `json:"status,omitempty"`
 }
@@ -951,7 +925,6 @@ const (
 
 	ServiceTypeNodePort ServiceType = "NodePort"
 
-
 	ServiceTypeLoadBalancer ServiceType = "LoadBalancer"
 )
 
@@ -964,46 +937,46 @@ type LoadBalancerStatus struct {
 }
 
 type LoadBalancerIngress struct {
-	IP string `json:"ip,omitempty"`
+	IP       string `json:"ip,omitempty"`
 
 	Hostname string `json:"hostname,omitempty"`
 }
 
 type ServiceSpec struct {
-	Ports []ServicePort `json:"ports"`
+	Ports               []ServicePort `json:"ports"`
 
-	Selector map[string]string `json:"selector,omitempty"`
+	Selector            map[string]string `json:"selector,omitempty"`
 
-	ClusterIP string `json:"clusterIP,omitempty"`
+	ClusterIP           string `json:"clusterIP,omitempty"`
 
-	Type ServiceType `json:"type,omitempty"`
+	Type                ServiceType `json:"type,omitempty"`
 
-	ExternalIPs []string `json:"externalIPs,omitempty"`
+	ExternalIPs         []string `json:"externalIPs,omitempty"`
 
 	DeprecatedPublicIPs []string `json:"deprecatedPublicIPs,omitempty"`
 
-	SessionAffinity ServiceAffinity `json:"sessionAffinity,omitempty"`
+	SessionAffinity     ServiceAffinity `json:"sessionAffinity,omitempty"`
 
-	LoadBalancerIP string `json:"loadBalancerIP,omitempty"`
+	LoadBalancerIP      string `json:"loadBalancerIP,omitempty"`
 }
 
 type ServicePort struct {
-	Name string `json:"name,omitempty"`
+	Name       string `json:"name,omitempty"`
 
-	Protocol Protocol `json:"protocol,omitempty"`
+	Protocol   Protocol `json:"protocol,omitempty"`
 
-	Port int32 `json:"port"`
+	Port       int32 `json:"port"`
 
 	TargetPort IntOrString `json:"targetPort,omitempty"`
 
-	NodePort int32 `json:"nodePort,omitempty"`
+	NodePort   int32 `json:"nodePort,omitempty"`
 }
 
 type Service struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ServiceSpec `json:"spec,omitempty"`
+	Spec   ServiceSpec `json:"spec,omitempty"`
 
 	Status ServiceStatus `json:"status,omitempty"`
 }
@@ -1019,12 +992,11 @@ type ServiceList struct {
 	Items []Service `json:"items"`
 }
 
-
 type ServiceAccount struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Secrets []ObjectReference `json:"secrets,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	Secrets          []ObjectReference `json:"secrets,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
 	ImagePullSecrets []LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
@@ -1036,7 +1008,6 @@ type ServiceAccountList struct {
 	Items []ServiceAccount `json:"items"`
 }
 
-
 type Endpoints struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
@@ -1045,21 +1016,21 @@ type Endpoints struct {
 }
 
 type EndpointSubset struct {
-	Addresses []EndpointAddress `json:"addresses,omitempty"`
+	Addresses         []EndpointAddress `json:"addresses,omitempty"`
 	NotReadyAddresses []EndpointAddress `json:"notReadyAddresses,omitempty"`
-	Ports []EndpointPort `json:"ports,omitempty"`
+	Ports             []EndpointPort `json:"ports,omitempty"`
 }
 
 type EndpointAddress struct {
-	IP string `json:"ip"`
+	IP        string `json:"ip"`
 
 	TargetRef *ObjectReference `json:"targetRef,omitempty"`
 }
 
 type EndpointPort struct {
-	Name string `json:"name,omitempty"`
+	Name     string `json:"name,omitempty"`
 
-	Port int32 `json:"port"`
+	Port     int32 `json:"port"`
 
 	Protocol Protocol `json:"protocol,omitempty"`
 }
@@ -1072,9 +1043,9 @@ type EndpointsList struct {
 }
 
 type NodeSpec struct {
-	PodCIDR string `json:"podCIDR,omitempty"`
-	ExternalID string `json:"externalID,omitempty"`
-	ProviderID string `json:"providerID,omitempty"`
+	PodCIDR       string `json:"podCIDR,omitempty"`
+	ExternalID    string `json:"externalID,omitempty"`
+	ProviderID    string `json:"providerID,omitempty"`
 	Unschedulable bool `json:"unschedulable,omitempty"`
 }
 
@@ -1087,29 +1058,29 @@ type NodeDaemonEndpoints struct {
 }
 
 type NodeSystemInfo struct {
-	MachineID string `json:"machineID"`
-	SystemUUID string `json:"systemUUID"`
-	BootID string `json:"bootID"`
-	KernelVersion string `json:"kernelVersion"`
-	OSImage string `json:"osImage"`
+	MachineID               string `json:"machineID"`
+	SystemUUID              string `json:"systemUUID"`
+	BootID                  string `json:"bootID"`
+	KernelVersion           string `json:"kernelVersion"`
+	OSImage                 string `json:"osImage"`
 	ContainerRuntimeVersion string `json:"containerRuntimeVersion"`
-	KubeletVersion string `json:"kubeletVersion"`
-	KubeProxyVersion string `json:"kubeProxyVersion"`
+	KubeletVersion          string `json:"kubeletVersion"`
+	KubeProxyVersion        string `json:"kubeProxyVersion"`
 }
 
 type NodeStatus struct {
-	Capacity ResourceList `json:"capacity,omitempty"`
-	Allocatable ResourceList `json:"allocatable,omitempty"`
-	Phase NodePhase `json:"phase,omitempty"`
-	Conditions []NodeCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
-	Addresses []NodeAddress `json:"addresses,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	Capacity        ResourceList `json:"capacity,omitempty"`
+	Allocatable     ResourceList `json:"allocatable,omitempty"`
+	Phase           NodePhase `json:"phase,omitempty"`
+	Conditions      []NodeCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
+	Addresses       []NodeAddress `json:"addresses,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 	DaemonEndpoints NodeDaemonEndpoints `json:"daemonEndpoints,omitempty"`
-	NodeInfo NodeSystemInfo `json:"nodeInfo,omitempty"`
-	Images []ContainerImage `json:"images",omitempty`
+	NodeInfo        NodeSystemInfo `json:"nodeInfo,omitempty"`
+	Images          []ContainerImage `json:"images",omitempty`
 }
 
 type ContainerImage struct {
-	Names []string `json:"names"`
+	Names     []string `json:"names"`
 	SizeBytes int64 `json:"sizeBytes,omitempty"`
 }
 
@@ -1129,24 +1100,24 @@ const (
 )
 
 type NodeCondition struct {
-	Type NodeConditionType `json:"type"`
-	Status ConditionStatus `json:"status"`
-	LastHeartbeatTime string `json:"lastHeartbeatTime,omitempty"`
+	Type               NodeConditionType `json:"type"`
+	Status             ConditionStatus `json:"status"`
+	LastHeartbeatTime  string `json:"lastHeartbeatTime,omitempty"`
 	LastTransitionTime string `json:"lastTransitionTime,omitempty"`
-	Reason string `json:"reason,omitempty"`
-	Message string `json:"message,omitempty"`
+	Reason             string `json:"reason,omitempty"`
+	Message            string `json:"message,omitempty"`
 }
 
 type NodeAddressType string
 
 const (
-	NodeHostName   NodeAddressType = "Hostname"
+	NodeHostName NodeAddressType = "Hostname"
 	NodeExternalIP NodeAddressType = "ExternalIP"
 	NodeInternalIP NodeAddressType = "InternalIP"
 )
 
 type NodeAddress struct {
-	Type NodeAddressType `json:"type"`
+	Type    NodeAddressType `json:"type"`
 	Address string `json:"address"`
 }
 
@@ -1157,6 +1128,7 @@ const (
 	ResourceMemory ResourceName = "memory"
 	ResourceStorage ResourceName = "storage"
 )
+
 type Quantity struct {
 	Amount *inf.Dec
 
@@ -1169,9 +1141,47 @@ type Node struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec NodeSpec `json:"spec,omitempty"`
+	Spec   NodeSpec `json:"spec,omitempty"`
 
 	Status NodeStatus `json:"status,omitempty"`
+}
+
+func PrintNode(node Node) {
+	fmt.Print("Node Message:\n")
+	fmt.Print("NodeName: " + node.Name + "\n")
+	fmt.Print("Namespace: " + node.Namespace + "\n")
+	fmt.Print("Kind: " + node.TypeMeta.APIVersion + "\n")
+	fmt.Print("APIVersion: " + node.TypeMeta.Kind + "\n")
+	fmt.Print("CreationTimestamp: " + node.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(node.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(node.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(node.Status)
+	fmt.Print("\n")
+}
+func PringNamespace(namespace Namespace) {
+	fmt.Print("Namespace Message:\n")
+	fmt.Print("Name: " + namespace.Name + "\n")
+	fmt.Print("Namespace: " + namespace.Namespace + "\n")
+	fmt.Print("Kind: " + namespace.TypeMeta.Kind + "\n")
+	fmt.Print("APIVersion: " + namespace.TypeMeta.APIVersion + "\n")
+	fmt.Print("CreationTimestamp: " + namespace.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(namespace.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(namespace.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(namespace.Status)
+	fmt.Print("\n")
+	fmt.Print("ObjectMeta: ")
+	fmt.Print(namespace.ObjectMeta)
+	fmt.Print("\n")
 }
 
 type NodeList struct {
@@ -1206,7 +1216,7 @@ type Namespace struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec NamespaceSpec `json:"spec,omitempty"`
+	Spec   NamespaceSpec `json:"spec,omitempty"`
 
 	Status NamespaceStatus `json:"status,omitempty"`
 }
@@ -1234,42 +1244,42 @@ type ExportOptions struct {
 	TypeMeta `json:",inline"`
 
 	Export bool `json:"export"`
-	Exact bool `json:"exact"`
+	Exact  bool `json:"exact"`
 }
 
 type ListOptions struct {
 	TypeMeta `json:",inline"`
 
-	LabelSelector string `json:"labelSelector,omitempty"`
-	FieldSelector string `json:"fieldSelector,omitempty"`
-	Watch bool `json:"watch,omitempty"`
+	LabelSelector   string `json:"labelSelector,omitempty"`
+	FieldSelector   string `json:"fieldSelector,omitempty"`
+	Watch           bool `json:"watch,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
-	TimeoutSeconds *int64 `json:"timeoutSeconds,omitempty"`
+	TimeoutSeconds  *int64 `json:"timeoutSeconds,omitempty"`
 }
 
 type PodLogOptions struct {
 	TypeMeta `json:",inline"`
 
-	Container string `json:"container,omitempty"`
-	Follow bool `json:"follow,omitempty"`
-	Previous bool `json:"previous,omitempty"`
+	Container    string `json:"container,omitempty"`
+	Follow       bool `json:"follow,omitempty"`
+	Previous     bool `json:"previous,omitempty"`
 	SinceSeconds *int64 `json:"sinceSeconds,omitempty"`
-	SinceTime *Time `json:"sinceTime,omitempty"`
-	Timestamps bool `json:"timestamps,omitempty"`
-	TailLines *int64 `json:"tailLines,omitempty"`
-	LimitBytes *int64 `json:"limitBytes,omitempty"`
+	SinceTime    *Time `json:"sinceTime,omitempty"`
+	Timestamps   bool `json:"timestamps,omitempty"`
+	TailLines    *int64 `json:"tailLines,omitempty"`
+	LimitBytes   *int64 `json:"limitBytes,omitempty"`
 }
 
 type PodAttachOptions struct {
 	TypeMeta `json:",inline"`
 
-	Stdin bool `json:"stdin,omitempty"`
+	Stdin     bool `json:"stdin,omitempty"`
 
-	Stdout bool `json:"stdout,omitempty"`
+	Stdout    bool `json:"stdout,omitempty"`
 
-	Stderr bool `json:"stderr,omitempty"`
+	Stderr    bool `json:"stderr,omitempty"`
 
-	TTY bool `json:"tty,omitempty"`
+	TTY       bool `json:"tty,omitempty"`
 
 	Container string `json:"container,omitempty"`
 }
@@ -1277,17 +1287,17 @@ type PodAttachOptions struct {
 type PodExecOptions struct {
 	TypeMeta `json:",inline"`
 
-	Stdin bool `json:"stdin,omitempty"`
+	Stdin     bool `json:"stdin,omitempty"`
 
-	Stdout bool `json:"stdout,omitempty"`
+	Stdout    bool `json:"stdout,omitempty"`
 
-	Stderr bool `json:"stderr,omitempty"`
+	Stderr    bool `json:"stderr,omitempty"`
 
-	TTY bool `json:"tty,omitempty"`
+	TTY       bool `json:"tty,omitempty"`
 
 	Container string `json:"container,omitempty"`
 
-	Command []string `json:"command"`
+	Command   []string `json:"command"`
 }
 
 type PodProxyOptions struct {
@@ -1309,14 +1319,14 @@ type ServiceProxyOptions struct {
 }
 
 type ObjectReference struct {
-	Kind string `json:"kind,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	Name string `json:"name,omitempty"`
-	UID string `json:"uid,omitempty"`
-	APIVersion string `json:"apiVersion,omitempty"`
+	Kind            string `json:"kind,omitempty"`
+	Namespace       string `json:"namespace,omitempty"`
+	Name            string `json:"name,omitempty"`
+	UID             string `json:"uid,omitempty"`
+	APIVersion      string `json:"apiVersion,omitempty"`
 	ResourceVersion string `json:"resourceVersion,omitempty"`
 
-	FieldPath string `json:"fieldPath,omitempty"`
+	FieldPath       string `json:"fieldPath,omitempty"`
 }
 
 type LocalObjectReference struct {
@@ -1330,7 +1340,7 @@ type SerializedReference struct {
 
 type EventSource struct {
 	Component string `json:"component,omitempty"`
-	Host string `json:"host,omitempty"`
+	Host      string `json:"host,omitempty"`
 }
 
 const (
@@ -1344,19 +1354,19 @@ type Event struct {
 
 	InvolvedObject ObjectReference `json:"involvedObject"`
 
-	Reason string `json:"reason,omitempty"`
+	Reason         string `json:"reason,omitempty"`
 
-	Message string `json:"message,omitempty"`
+	Message        string `json:"message,omitempty"`
 
-	Source EventSource `json:"source,omitempty"`
+	Source         EventSource `json:"source,omitempty"`
 
 	FirstTimestamp Time `json:"firstTimestamp,omitempty"`
 
-	LastTimestamp Time `json:"lastTimestamp,omitempty"`
+	LastTimestamp  Time `json:"lastTimestamp,omitempty"`
 
-	Count int32 `json:"count,omitempty"`
+	Count          int32 `json:"count,omitempty"`
 
-	Type string `json:"type,omitempty"`
+	Type           string `json:"type,omitempty"`
 }
 
 type EventList struct {
@@ -1380,7 +1390,7 @@ type Object interface {
 }
 type RawExtension struct {
 	RawJSON []byte
-	Object Object `json:"-"`
+	Object  Object `json:"-"`
 }
 
 type List struct {
@@ -1398,11 +1408,11 @@ const (
 )
 
 type LimitRangeItem struct {
-	Type LimitType `json:"type,omitempty"`
-	Max ResourceList `json:"max,omitempty"`
-	Min ResourceList `json:"min,omitempty"`
-	Default ResourceList `json:"default,omitempty"`
-	DefaultRequest ResourceList `json:"defaultRequest,omitempty"`
+	Type                 LimitType `json:"type,omitempty"`
+	Max                  ResourceList `json:"max,omitempty"`
+	Min                  ResourceList `json:"min,omitempty"`
+	Default              ResourceList `json:"default,omitempty"`
+	DefaultRequest       ResourceList `json:"defaultRequest,omitempty"`
 	MaxLimitRequestRatio ResourceList `json:"maxLimitRequestRatio,omitempty"`
 }
 
@@ -1448,7 +1458,7 @@ const (
 )
 
 type ResourceQuotaSpec struct {
-	Hard ResourceList `json:"hard,omitempty"`
+	Hard   ResourceList `json:"hard,omitempty"`
 	Scopes []ResourceQuotaScope `json:"scopes,omitempty"`
 }
 
@@ -1457,12 +1467,11 @@ type ResourceQuotaStatus struct {
 	Used ResourceList `json:"used,omitempty"`
 }
 
-
 type ResourceQuota struct {
 	TypeMeta `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ResourceQuotaSpec `json:"spec,omitempty"`
+	Spec   ResourceQuotaSpec `json:"spec,omitempty"`
 
 	Status ResourceQuotaStatus `json:"status,omitempty"`
 }
@@ -1537,10 +1546,10 @@ const (
 )
 
 type ComponentCondition struct {
-	Type ComponentConditionType `json:"type"`
-	Status ConditionStatus `json:"status"`
+	Type    ComponentConditionType `json:"type"`
+	Status  ConditionStatus `json:"status"`
 	Message string `json:"message,omitempty"`
-	Error string `json:"error,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
 type ComponentStatus struct {
@@ -1562,23 +1571,23 @@ type DownwardAPIVolumeSource struct {
 }
 
 type DownwardAPIVolumeFile struct {
-	Path string `json:"path"`
+	Path     string `json:"path"`
 	FieldRef ObjectFieldSelector `json:"fieldRef"`
 }
 
 type SecurityContext struct {
-	Capabilities *Capabilities `json:"capabilities,omitempty"`
-	Privileged *bool `json:"privileged,omitempty"`
-	SELinuxOptions *SELinuxOptions `json:"seLinuxOptions,omitempty"`
-	RunAsUser *int64 `json:"runAsUser,omitempty"`
-	RunAsNonRoot *bool `json:"runAsNonRoot,omitempty"`
+	Capabilities           *Capabilities `json:"capabilities,omitempty"`
+	Privileged             *bool `json:"privileged,omitempty"`
+	SELinuxOptions         *SELinuxOptions `json:"seLinuxOptions,omitempty"`
+	RunAsUser              *int64 `json:"runAsUser,omitempty"`
+	RunAsNonRoot           *bool `json:"runAsNonRoot,omitempty"`
 	ReadOnlyRootFilesystem *bool `json:"readOnlyRootFilesystem,omitempty"`
 }
 
 type SELinuxOptions struct {
-	User string `json:"user,omitempty"`
-	Role string `json:"role,omitempty"`
-	Type string `json:"type,omitempty"`
+	User  string `json:"user,omitempty"`
+	Role  string `json:"role,omitempty"`
+	Type  string `json:"type,omitempty"`
 	Level string `json:"level,omitempty"`
 }
 
@@ -1587,7 +1596,7 @@ type RangeAllocation struct {
 	ObjectMeta `json:"metadata,omitempty"`
 
 	Range string `json:"range"`
-	Data []byte `json:"data"`
+	Data  []byte `json:"data"`
 }
 
 const (

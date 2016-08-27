@@ -26,7 +26,7 @@ func main() {
 	//	return
 	//}
 	//fmt.Print(objs)
-	Request.GetAllNamespace()
+	Request.GetPodsOfNamespace("default")
 
 }
 

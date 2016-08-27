@@ -22,3 +22,7 @@ const (
 	DeleteService_DELETE string = "/api/v1/namespaces/{namespace}/services/{name}" //delete a Service
 	ReadService_GET string = "/api/v1/namespaces/{namespace}/services/{name}" //read the specified Service
 )
+
+func GeneratePodListNamespaceUrl(namespace string) string {
+	return GetNamespaces_GET + "/" + namespace + "/pods"
+}

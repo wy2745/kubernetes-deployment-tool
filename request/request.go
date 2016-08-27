@@ -48,6 +48,24 @@ func GetAllNamespace() {
 		}
 	}
 }
+func GetPodsOfNamespace(namespace string) {
+	str := GeneratePodListNamespaceUrl(namespace)
+	fmt.Print(destinationServer + str)
+	resp := InvokeGetReuqest(destinationServer + str)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.PodList
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, item := range v.Items {
+			classType.PrintPod(item)
+		}
+	}
+}
 
 //func GetRequest(url, parameter string) interface{} {
 //

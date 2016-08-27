@@ -689,7 +689,7 @@ type ContainerStateWaiting struct {
 }
 
 type ContainerStateRunning struct {
-	StartedAt Time `json:"startedAt,omitempty"`
+	StartedAt string `json:"startedAt,omitempty"`
 }
 
 type ContainerStateTerminated struct {
@@ -739,7 +739,7 @@ type PodCondition struct {
 	Type               PodConditionType `json:"type"`
 	Status             ConditionStatus `json:"status"`
 	LastProbeTime      Time `json:"lastProbeTime,omitempty"`
-	LastTransitionTime Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime string `json:"lastTransitionTime,omitempty"`
 	Reason             string `json:"reason,omitempty"`
 	Message            string `json:"message,omitempty"`
 }
@@ -836,7 +836,7 @@ type PodStatus struct {
 	HostIP            string `json:"hostIP,omitempty"`
 	PodIP             string `json:"podIP,omitempty"`
 
-	StartTime         *Time `json:"startTime,omitempty"`
+	StartTime         *string `json:"startTime,omitempty"`
 	ContainerStatuses []ContainerStatus `json:"containerStatuses,omitempty"`
 }
 
@@ -1166,9 +1166,6 @@ func PrintNode(node Node) {
 func PringNamespace(namespace Namespace) {
 	fmt.Print("Namespace Message:\n")
 	fmt.Print("Name: " + namespace.Name + "\n")
-	fmt.Print("Namespace: " + namespace.Namespace + "\n")
-	fmt.Print("Kind: " + namespace.TypeMeta.Kind + "\n")
-	fmt.Print("APIVersion: " + namespace.TypeMeta.APIVersion + "\n")
 	fmt.Print("CreationTimestamp: " + namespace.CreationTimestamp + "\n")
 	fmt.Print("Labels: ")
 	fmt.Print(namespace.Labels)
@@ -1181,6 +1178,23 @@ func PringNamespace(namespace Namespace) {
 	fmt.Print("\n")
 	fmt.Print("ObjectMeta: ")
 	fmt.Print(namespace.ObjectMeta)
+	fmt.Print("\n")
+}
+func PrintPod(pod Pod) {
+	fmt.Print("Pod Message:\n")
+	fmt.Print("Name: " + pod.Name + "\n")
+	fmt.Print("CreationTimestamp: " + pod.CreationTimestamp + "\n")
+	fmt.Print("spec: ")
+	fmt.Print(pod.Spec)
+	fmt.Print("\n")
+	fmt.Print("ObjectMeta: ")
+	fmt.Print(pod.ObjectMeta)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(pod.Status)
+	fmt.Print("\n")
+	fmt.Print("Labels: ")
+	fmt.Print(pod.Labels)
 	fmt.Print("\n")
 }
 

@@ -1,7 +1,11 @@
 package request
 
 const (
-	destinationServer string = "http://202.120.40.177:16380"
+	userName string = "admin"
+	password string = "FlbY3CD6mcFUfZvb"
+
+	destinationServer_Test string = "http://202.120.40.177:16380"
+	destinationServer_Caicloud string = "https://sjtu.caicloudapp.com"
 	GetNodeList_GET string = "/api/v1/nodes"   //list or watch objects of kind Node
 	CreateNode_POST string = "/api/v1/nodes"    //create a Node
 	DeleteNode_DELETE string = "/api/v1/nodes/{name}"  //delete a Node
@@ -26,3 +30,4 @@ const (
 func GeneratePodListNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/pods"
 }
+

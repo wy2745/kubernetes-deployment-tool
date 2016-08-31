@@ -1,14 +1,7 @@
 package main
 
 import (
-	//"fmt"
-	//"net/http"
-	//"io/ioutil"
-	//"encoding/json"
 	Request "./request"
-
-	//jsonParse "./json"
-	//"fmt"
 )
 
 func main() {
@@ -26,7 +19,8 @@ func main() {
 	//	return
 	//}
 	//fmt.Print(objs)
-	Request.GetPodsOfNamespace("default")
+	//Request.GenetatePodBody("default", "mysql:5.7", "mysql----test")
+	Request.CreatePod_test("default", "mysql:5.7", "mysql----test")
 
 }
 

@@ -18,4 +18,12 @@ func JsonUnmarsha(body []byte, v interface{}) {
 	}
 }
 
+func JsonMarsha(v interface{}) []byte {
+	b, err := json.Marshal(&v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return b
+}
+
 

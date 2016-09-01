@@ -13,6 +13,7 @@ import (
 func setBasicAuthOfCaicloud(r *http.Request) {
 	r.SetBasicAuth(userName, password)
 }
+
 func InvokeRequest_Caicloud(method string, url string, body io.Reader) *http.Response {
 	client := http.Client{}
 	req, err := http.NewRequest(method, url, body)
@@ -32,6 +33,7 @@ func InvokeGetReuqest(url string) *http.Response {
 	}
 	return resp
 }
+
 func GetAllNode_Caicloud() {
 	resp := InvokeRequest_Caicloud("GET", destinationServer_Caicloud + GetNodeList_GET, nil)
 	if (resp != nil) {
@@ -48,6 +50,7 @@ func GetAllNode_Caicloud() {
 		}
 	}
 }
+
 func GetAllNode_Test() {
 	resp := InvokeGetReuqest(destinationServer_Test + GetNodeList_GET)
 	if (resp != nil) {
@@ -64,6 +67,7 @@ func GetAllNode_Test() {
 		}
 	}
 }
+
 func GetAllNamespace_Test() {
 	resp := InvokeGetReuqest(destinationServer_Test + GetNamespaces_GET)
 	if (resp != nil) {
@@ -76,10 +80,28 @@ func GetAllNamespace_Test() {
 		var v classType.NamespaceList
 		jsonParse.JsonUnmarsha(body, &v)
 		for _, item := range v.Items {
-			classType.PringNamespace(item)
+			classType.PrintNamespace(item)
 		}
 	}
 }
+
+func GetAllService_Test(namespace string) {
+	resp := InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.ServiceList
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, item := range v.Items {
+			classType.PrintService(item)
+		}
+	}
+}
+
 func GetPodsOfNamespace_Test(namespace string) {
 	str := GeneratePodListNamespaceUrl(namespace)
 	resp := InvokeGetReuqest(destinationServer_Test + str)
@@ -97,10 +119,8 @@ func GetPodsOfNamespace_Test(namespace string) {
 		}
 	}
 }
-func CreatePod_test(namespace string, image string, name string) {
-	byte := GenetatePodBody(namespace, image, name)
-	url := destinationServer_Test + GeneratePodListNamespaceUrl(namespace)
-	fmt.Print(url + "\n")
+
+func PostUrl_test(url string, byte []byte) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(byte))
 	if err != nil {
 		panic(err)
@@ -120,15 +140,66 @@ func CreatePod_test(namespace string, image string, name string) {
 	fmt.Println("response Body:", string(body))
 }
 
-func GenetatePodBody(namespace string, image string, name string) []byte {
+func CreatePod_test(namespace string, image string, name string) {
+	byte := GeneratePodBody(namespace, image, name)
+	url := destinationServer_Test + GeneratePodListNamespaceUrl(namespace)
+	fmt.Print(url + "\n")
+	PostUrl_test(url, byte)
+	//req, err := http.NewRequest("POST", url, bytes.NewBuffer(byte))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//req.Header.Set("Content-Type", "application/json")
+	//
+	//client := &http.Client{}
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//defer resp.Body.Close()
+	//
+	//fmt.Println("response Status:", resp.Status)
+	//fmt.Println("response Headers:", resp.Header)
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println("response Body:", string(body))
+}
+
+func CreateService_test(name string, label_name string, namespace string, port int32) {
+	byte := GenerateServiceBody(name, label_name, namespace, port)
+	url := destinationServer_Test + GenerateServiceListNamespaceUrl(namespace)
+	fmt.Print(url + "\n")
+	PostUrl_test(url, byte)
+	//req, err := http.NewRequest("POST", url, bytes.NewBuffer(byte))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//req.Header.Set("Content-Type", "application/json")
+	//
+	//client := &http.Client{}
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//defer resp.Body.Close()
+	//
+	//fmt.Println("response Status:", resp.Status)
+	//fmt.Println("response Headers:", resp.Header)
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println("response Body:", string(body))
+}
+
+func GeneratePodBody(namespace string, image string, name string) []byte {
+	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
 	typeMedata.Kind = "Pod"
+	//生成objectMedata
 	var objectMedata classType.ObjectMeta
 	objectMedata.Labels = make(map[string]string)
 	objectMedata.Labels["name"] = name
 	objectMedata.Namespace = namespace
 	objectMedata.Name = name
+	//生成spec.container
 	var container classType.Container
 	container.Name = name
 	container.Image = image
@@ -137,6 +208,7 @@ func GenetatePodBody(namespace string, image string, name string) []byte {
 	var pod classType.Pod
 	pod.TypeMeta = typeMedata
 	pod.ObjectMeta = objectMedata
+	//将container拷到pod.spec.containers
 	slice := []classType.Container{container}
 	pod.Spec.Containers = slice
 	b := jsonParse.JsonMarsha(pod)
@@ -144,6 +216,37 @@ func GenetatePodBody(namespace string, image string, name string) []byte {
 	return b
 
 }
+
+func GenerateServiceBody(name string, label_name string, namespace string, port int32) []byte {
+	//生成typeMedata
+	var typeMedata classType.TypeMeta
+	typeMedata.APIVersion = "v1"
+	typeMedata.Kind = "Service"
+
+	//生成objectMedata
+	var objectMedata classType.ObjectMeta
+	objectMedata.Labels = make(map[string]string)
+	objectMedata.Labels["name"] = name
+	objectMedata.Namespace = namespace
+	objectMedata.Name = name
+
+	//生成Service spec
+	var servicePort classType.ServicePort
+	servicePort.Port = port
+	slice := []classType.ServicePort{servicePort}
+	var serviceSpec classType.ServiceSpec
+	serviceSpec.Selector = make(map[string]string)
+	serviceSpec.Selector["name"] = label_name
+	serviceSpec.Ports = slice
+	var service classType.Service
+	service.ObjectMeta = objectMedata
+	service.TypeMeta = typeMedata
+	service.Spec = serviceSpec
+	b := jsonParse.JsonMarsha(service)
+	fmt.Print(string(b))
+	return b
+}
+
 func Test() {
 	var abc = "=-="
 	var str = `"title":"haha"`
@@ -168,26 +271,13 @@ func Test() {
 //	return v
 //}
 //apiVersion: v1
-//kind: Pod
+//kind: Service
 //metadata:
-//name: mysql
 //labels:
 //name: mysql
+//name: mysql
 //spec:
-//containers:
-//- image: mysql:5.7
+//ports:
+//- port: 3306
+//selector:
 //name: mysql
-//env:
-//- name: MYSQL_ROOT_PASSWORD
-//value: '123456'
-//      ports:
-//- containerPort: 3306
-//hostPort: 3306
-//name: mysql
-//volumeMounts:
-//- mountPath: /var/lib/mysql
-//name: data
-//volumes:
-//- name: data
-//hostPath:
-//path: /home/administrator/data

@@ -967,7 +967,7 @@ type ServicePort struct {
 
 	Port       int32 `json:"port"`
 
-	TargetPort IntOrString `json:"targetPort,omitempty"`
+	TargetPort int `json:"targetPort,omitempty"` //IntOrString
 
 	NodePort   int32 `json:"nodePort,omitempty"`
 }
@@ -1146,6 +1146,24 @@ type Node struct {
 	Status NodeStatus `json:"status,omitempty"`
 }
 
+func PrintService(service Service) {
+	fmt.Print("Service Message:\n")
+	fmt.Print("NodeName: " + service.Name + "\n")
+	fmt.Print("Namespace: " + service.Namespace + "\n")
+	fmt.Print("Kind: " + service.TypeMeta.APIVersion + "\n")
+	fmt.Print("APIVersion: " + service.TypeMeta.Kind + "\n")
+	fmt.Print("CreationTimestamp: " + service.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(service.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(service.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(service.Status)
+	fmt.Print("\n")
+}
+
 func PrintNode(node Node) {
 	fmt.Print("Node Message:\n")
 	fmt.Print("NodeName: " + node.Name + "\n")
@@ -1163,7 +1181,7 @@ func PrintNode(node Node) {
 	fmt.Print(node.Status)
 	fmt.Print("\n")
 }
-func PringNamespace(namespace Namespace) {
+func PrintNamespace(namespace Namespace) {
 	fmt.Print("Namespace Message:\n")
 	fmt.Print("Name: " + namespace.Name + "\n")
 	fmt.Print("CreationTimestamp: " + namespace.CreationTimestamp + "\n")

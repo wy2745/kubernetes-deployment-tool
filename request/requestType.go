@@ -30,4 +30,7 @@ const (
 func GeneratePodListNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/pods"
 }
+func GenerateServiceListNamespaceUrl(namespace string) string {
+	return GetNamespaces_GET + "/" + namespace + "/services"
+}
 

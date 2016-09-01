@@ -85,6 +85,23 @@ func GetAllNamespace_Test() {
 	}
 }
 
+func GetAllReplicationcontrollers_Test() {
+	resp := InvokeGetReuqest(destinationServer_Test + ReadAllReplicationController_GET)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.ReplicationControllerList
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, item := range v.Items {
+			classType.PrintReplicationController(item)
+		}
+	}
+}
+
 func GetAllService_Test(namespace string) {
 	resp := InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
 	if (resp != nil) {
@@ -103,7 +120,7 @@ func GetAllService_Test(namespace string) {
 }
 
 func GetPodsOfNamespace_Test(namespace string) {
-	str := GeneratePodListNamespaceUrl(namespace)
+	str := GeneratePodNamespaceUrl(namespace)
 	resp := InvokeGetReuqest(destinationServer_Test + str)
 	if (resp != nil) {
 		defer resp.Body.Close()
@@ -139,29 +156,32 @@ func PostUrl_test(url string, byte []byte) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println("response Body:", string(body))
 }
+func DeleteUrl_test(url string, byte []byte) {
+	fmt.Print(url)
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
+}
 
 func CreatePod_test(namespace string, image string, name string) {
 	byte := GeneratePodBody(namespace, image, name)
-	url := destinationServer_Test + GeneratePodListNamespaceUrl(namespace)
+	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace)
 	fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
-	//req, err := http.NewRequest("POST", url, bytes.NewBuffer(byte))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//req.Header.Set("Content-Type", "application/json")
-	//
-	//client := &http.Client{}
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//defer resp.Body.Close()
-	//
-	//fmt.Println("response Status:", resp.Status)
-	//fmt.Println("response Headers:", resp.Header)
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println("response Body:", string(body))
 }
 
 func CreateService_test(name string, label_name string, namespace string, port int32) {
@@ -169,23 +189,28 @@ func CreateService_test(name string, label_name string, namespace string, port i
 	url := destinationServer_Test + GenerateServiceListNamespaceUrl(namespace)
 	fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
-	//req, err := http.NewRequest("POST", url, bytes.NewBuffer(byte))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//req.Header.Set("Content-Type", "application/json")
-	//
-	//client := &http.Client{}
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//defer resp.Body.Close()
-	//
-	//fmt.Println("response Status:", resp.Status)
-	//fmt.Println("response Headers:", resp.Header)
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println("response Body:", string(body))
+}
+
+func CreateReplicationController_test(namespace string, image string, name string, podName string, labelName string, replic int32) {
+	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic)
+	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace)
+	fmt.Print(url + "\n")
+	PostUrl_test(url, byte)
+}
+
+func DeletePod(namespace string, name string) {
+	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace) + "/" + name
+	DeleteUrl_test(url, nil)
+}
+
+func DeleteService(namespace string, name string) {
+	url := destinationServer_Test + GenerateServiceListNamespaceUrl(namespace) + "/" + name
+	DeleteUrl_test(url, nil)
+}
+
+func DeleteReplicationController(namespace string, name string) {
+	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace) + "/" + name
+	DeleteUrl_test(url, nil)
 }
 
 func GeneratePodBody(namespace string, image string, name string) []byte {
@@ -217,7 +242,7 @@ func GeneratePodBody(namespace string, image string, name string) []byte {
 
 }
 
-func GenerateServiceBody(name string, label_name string, namespace string, port int32) []byte {
+func GenerateServiceBody(name string, labelName string, namespace string, port int32) []byte {
 	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
@@ -236,7 +261,7 @@ func GenerateServiceBody(name string, label_name string, namespace string, port 
 	slice := []classType.ServicePort{servicePort}
 	var serviceSpec classType.ServiceSpec
 	serviceSpec.Selector = make(map[string]string)
-	serviceSpec.Selector["name"] = label_name
+	serviceSpec.Selector["name"] = labelName
 	serviceSpec.Ports = slice
 	var service classType.Service
 	service.ObjectMeta = objectMedata
@@ -247,37 +272,51 @@ func GenerateServiceBody(name string, label_name string, namespace string, port 
 	return b
 }
 
-func Test() {
-	var abc = "=-="
-	var str = `"title":"haha"`
-	var cde = `"ld":` + `"` + abc + `",` + str
-	var dfg = `{` + cde + `}`
-	fmt.Print(dfg)
+func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32) []byte {
+	//生成typeMedata
+	var typeMedata classType.TypeMeta
+	typeMedata.APIVersion = "v1"
+	typeMedata.Kind = "ReplicationController"
+	//生成objectMedata
+	var objectMedata classType.ObjectMeta
+	objectMedata.Labels = make(map[string]string)
+	objectMedata.Labels["name"] = labelName
+	objectMedata.Namespace = namespace
+	objectMedata.Name = name
+
+	//生成PodObjectMedata
+	var objectMedata2 classType.ObjectMeta
+	objectMedata2.Labels = make(map[string]string)
+	objectMedata2.Labels["name"] = labelName
+	objectMedata2.Namespace = namespace
+	objectMedata2.Name = podName
+
+	//生成PodTemplateSpec.container
+	var container classType.Container
+	container.Name = name
+	container.Image = image
+	var containers [1]classType.Container
+	containers[0] = container
+	slice := []classType.Container{container}
+	var podTemplateSpec classType.PodTemplateSpec
+	podTemplateSpec.ObjectMeta = objectMedata2
+	podTemplateSpec.Spec.Containers = slice
+
+	var replicationControllerSpec classType.ReplicationControllerSpec
+	replicationControllerSpec.Template = &podTemplateSpec
+
+	replicationControllerSpec.Replicas = &replic
+	replicationControllerSpec.Selector = make(map[string]string)
+	replicationControllerSpec.Selector["name"] = labelName
+
+	var replicationController classType.ReplicationController
+	replicationController.Spec = replicationControllerSpec
+	replicationController.ObjectMeta = objectMedata
+	replicationController.TypeMeta = typeMedata
+
+	b := jsonParse.JsonMarsha(replicationController)
+	fmt.Print(string(b))
+	return b
+
 }
 
-//func GetRequest(url, parameter string) interface{} {
-//
-//	if (parameter == "") {
-//		parameter = "/"
-//	}
-//	resp, err := http.Get(url + parameter)
-//	if err != nil {
-//		return nil
-//	}
-//	fmt.Print(url + parameter + "\n")
-//	defer resp.Body.Close()
-//	body, err := ioutil.ReadAll(resp.Body)
-//	v := jsonParse.JsonUnmarsha(body)
-//	return v
-//}
-//apiVersion: v1
-//kind: Service
-//metadata:
-//labels:
-//name: mysql
-//name: mysql
-//spec:
-//ports:
-//- port: 3306
-//selector:
-//name: mysql

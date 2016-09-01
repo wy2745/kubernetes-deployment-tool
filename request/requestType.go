@@ -25,12 +25,19 @@ const (
 	CreateService_POST string = "/api/v1/namespaces/{namespace}/services" //create a Service
 	DeleteService_DELETE string = "/api/v1/namespaces/{namespace}/services/{name}" //delete a Service
 	ReadService_GET string = "/api/v1/namespaces/{namespace}/services/{name}" //read the specified Service
+
+	ReadAllReplicationController_GET string = "/api/v1/replicationcontrollers" //list or watch objects of kind ReplicationController
+	ReadReplicationControllerListOfNamespace_GET string = "/api/v1/namespaces/{namespace}/replicationcontrollers" //list or watch
+	// objects of kind ReplicationController
 )
 
-func GeneratePodListNamespaceUrl(namespace string) string {
+func GeneratePodNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/pods"
 }
 func GenerateServiceListNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/services"
+}
+func GenerateReplicationControllerNamespaceUrl(namespace string) string {
+	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers"
 }
 

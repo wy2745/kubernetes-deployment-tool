@@ -1146,9 +1146,27 @@ type Node struct {
 	Status NodeStatus `json:"status,omitempty"`
 }
 
+func PrintReplicationController(replicationcontroller ReplicationController) {
+	fmt.Print("Replicationcontroller Message:\n")
+	fmt.Print("ReplicationcontrollerName: " + replicationcontroller.Name + "\n")
+	fmt.Print("Namespace: " + replicationcontroller.Namespace + "\n")
+	fmt.Print("Kind: " + replicationcontroller.TypeMeta.APIVersion + "\n")
+	fmt.Print("APIVersion: " + replicationcontroller.TypeMeta.Kind + "\n")
+	fmt.Print("CreationTimestamp: " + replicationcontroller.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(replicationcontroller.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(replicationcontroller.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(replicationcontroller.Status)
+	fmt.Print("\n")
+}
+
 func PrintService(service Service) {
 	fmt.Print("Service Message:\n")
-	fmt.Print("NodeName: " + service.Name + "\n")
+	fmt.Print("ServiceName: " + service.Name + "\n")
 	fmt.Print("Namespace: " + service.Namespace + "\n")
 	fmt.Print("Kind: " + service.TypeMeta.APIVersion + "\n")
 	fmt.Print("APIVersion: " + service.TypeMeta.Kind + "\n")

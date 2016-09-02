@@ -3,7 +3,6 @@ package jsonParse
 import (
 	"encoding/json"
 	"strings"
-	"fmt"
 )
 
 func JsonNewDecoder(body []byte) *json.Decoder {
@@ -13,15 +12,14 @@ func JsonNewDecoder(body []byte) *json.Decoder {
 }
 
 func JsonUnmarsha(body []byte, v interface{}) {
-	if err := json.Unmarshal(body, &v); err != nil {
-		fmt.Println(err)
+	var err error
+	if err = json.Unmarshal(body, &v); err != nil {
 	}
 }
 
 func JsonMarsha(v interface{}) []byte {
 	b, err := json.Marshal(&v)
 	if err != nil {
-		fmt.Println(err)
 	}
 	return b
 }

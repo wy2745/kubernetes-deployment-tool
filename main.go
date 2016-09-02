@@ -1,7 +1,8 @@
 package main
 
 import (
-	Request "./request"
+	"fmt"
+	WorkLoadController "./workload"
 )
 
 func main() {
@@ -13,7 +14,10 @@ func main() {
 	//Request.DeleteService("default", "mysql-service")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GenerateServiceBody("mysql-service", "mysql----test", "default", 3302)
-	Request.GetAllService_Test("default")
+	WorkLoadController.MissionRecord()
+	//Request.GetAllService_Test("default")
+	fmt.Println("tick tick stop")
+	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()
 	//Request.CreateReplicationController_test("default", "mysql:5.7", "mysql-rpc", "mysql-test", "mysql----test", 2)
 	//Request.DeleteReplicationController("default", "mysql-rpc")

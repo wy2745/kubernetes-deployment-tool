@@ -45,9 +45,9 @@ func GetAllNode_Caicloud() {
 		}
 		var v classType.NodeList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintNode(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintNode(item)
+		//}
 	}
 }
 
@@ -62,9 +62,9 @@ func GetAllNode_Test() {
 		}
 		var v classType.NodeList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintNode(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintNode(item)
+		//}
 	}
 }
 
@@ -79,9 +79,9 @@ func GetAllNamespace_Test() {
 		}
 		var v classType.NamespaceList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintNamespace(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintNamespace(item)
+		//}
 	}
 }
 
@@ -96,9 +96,9 @@ func GetAllReplicationcontrollers_Test() {
 		}
 		var v classType.ReplicationControllerList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintReplicationController(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintReplicationController(item)
+		//}
 	}
 }
 
@@ -113,9 +113,9 @@ func GetAllService_Test(namespace string) {
 		}
 		var v classType.ServiceList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintService(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintService(item)
+		//}
 	}
 }
 
@@ -131,10 +131,28 @@ func GetPodsOfNamespace_Test(namespace string) {
 		}
 		var v classType.PodList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintPod(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintPod(item)
+		//}
 	}
+}
+
+func GetPodByNameAndNamespace(namespace string, name string) classType.Pod {
+	var v classType.Pod
+	str := GeneratePodNameUrl(namespace, name)
+	resp := InvokeGetReuqest(destinationServer_Test + str)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return v
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		//classType.PrintPod(v)
+		return v
+	}
+	return v
 }
 
 func PostUrl_test(url string, byte []byte) {
@@ -151,13 +169,14 @@ func PostUrl_test(url string, byte []byte) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	//fmt.Println("response Status:", resp.Status)
+	//fmt.Println("response Headers:", resp.Header)
+	ioutil.ReadAll(resp.Body)
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println("response Body:", string(body))
 }
 func DeleteUrl_test(url string, byte []byte) {
-	fmt.Print(url)
+	//fmt.Print(url)
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		panic(err)
@@ -171,10 +190,11 @@ func DeleteUrl_test(url string, byte []byte) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	//fmt.Println("response Status:", resp.Status)
+	//fmt.Println("response Headers:", resp.Header)
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println("response Body:", string(body))
+	ioutil.ReadAll(resp.Body)
 }
 
 func CreatePod_test(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string) {
@@ -187,14 +207,14 @@ func CreatePod_test(namespace string, image string, name string, cpu_min string,
 	resource.Requests["memory"] = mem_min
 	byte := GeneratePodBody(namespace, image, name, resource)
 	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace)
-	fmt.Print(url + "\n")
+	//fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
 }
 
 func CreateService_test(name string, label_name string, namespace string, port int32) {
 	byte := GenerateServiceBody(name, label_name, namespace, port)
 	url := destinationServer_Test + GenerateServiceListNamespaceUrl(namespace)
-	fmt.Print(url + "\n")
+	//fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
 }
 
@@ -208,7 +228,7 @@ func CreateReplicationController_test(namespace string, image string, name strin
 	resource.Requests["memory"] = mem_min
 	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic, resource)
 	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace)
-	fmt.Print(url + "\n")
+	//fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
 }
 
@@ -252,7 +272,7 @@ func GeneratePodBody(namespace string, image string, name string, resource class
 	slice := []classType.Container{container}
 	pod.Spec.Containers = slice
 	b := jsonParse.JsonMarsha(pod)
-	fmt.Print(string(b))
+	//fmt.Print(string(b))
 	return b
 
 }
@@ -283,7 +303,7 @@ func GenerateServiceBody(name string, labelName string, namespace string, port i
 	service.TypeMeta = typeMedata
 	service.Spec = serviceSpec
 	b := jsonParse.JsonMarsha(service)
-	fmt.Print(string(b))
+	//fmt.Print(string(b))
 	return b
 }
 
@@ -331,7 +351,7 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	replicationController.TypeMeta = typeMedata
 
 	b := jsonParse.JsonMarsha(replicationController)
-	fmt.Print(string(b))
+	//fmt.Print(string(b))
 	return b
 
 }

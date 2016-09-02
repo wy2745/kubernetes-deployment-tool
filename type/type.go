@@ -697,8 +697,8 @@ type ContainerStateTerminated struct {
 	Signal      int32 `json:"signal,omitempty"`
 	Reason      string `json:"reason,omitempty"`
 	Message     string `json:"message,omitempty"`
-	StartedAt   Time `json:"startedAt,omitempty"`
-	FinishedAt  Time `json:"finishedAt,omitempty"`
+	StartedAt   string `json:"startedAt,omitempty"`
+	FinishedAt  string `json:"finishedAt,omitempty"`
 	ContainerID string `json:"containerID,omitempty"`
 }
 

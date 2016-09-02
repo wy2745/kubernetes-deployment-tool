@@ -177,8 +177,15 @@ func DeleteUrl_test(url string, byte []byte) {
 	fmt.Println("response Body:", string(body))
 }
 
-func CreatePod_test(namespace string, image string, name string) {
-	byte := GeneratePodBody(namespace, image, name)
+func CreatePod_test(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string) {
+	var resource classType.ResourceRequirements
+	resource.Limits = make(map[classType.ResourceName]string)
+	resource.Limits["cpu"] = cpu_max
+	resource.Limits["memory"] = mem_max
+	resource.Requests = make(map[classType.ResourceName]string)
+	resource.Requests["cpu"] = cpu_min
+	resource.Requests["memory"] = mem_min
+	byte := GeneratePodBody(namespace, image, name, resource)
 	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace)
 	fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
@@ -191,8 +198,15 @@ func CreateService_test(name string, label_name string, namespace string, port i
 	PostUrl_test(url, byte)
 }
 
-func CreateReplicationController_test(namespace string, image string, name string, podName string, labelName string, replic int32) {
-	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic)
+func CreateReplicationController_test(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string) {
+	var resource classType.ResourceRequirements
+	resource.Limits = make(map[classType.ResourceName]string)
+	resource.Limits["cpu"] = cpu_max
+	resource.Limits["memory"] = mem_max
+	resource.Requests = make(map[classType.ResourceName]string)
+	resource.Requests["cpu"] = cpu_min
+	resource.Requests["memory"] = mem_min
+	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic, resource)
 	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace)
 	fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
@@ -213,7 +227,7 @@ func DeleteReplicationController(namespace string, name string) {
 	DeleteUrl_test(url, nil)
 }
 
-func GeneratePodBody(namespace string, image string, name string) []byte {
+func GeneratePodBody(namespace string, image string, name string, resource classType.ResourceRequirements) []byte {
 	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
@@ -228,6 +242,7 @@ func GeneratePodBody(namespace string, image string, name string) []byte {
 	var container classType.Container
 	container.Name = name
 	container.Image = image
+	container.Resources = resource
 	var containers [1]classType.Container
 	containers[0] = container
 	var pod classType.Pod
@@ -272,7 +287,7 @@ func GenerateServiceBody(name string, labelName string, namespace string, port i
 	return b
 }
 
-func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32) []byte {
+func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32, resource classType.ResourceRequirements) []byte {
 	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
@@ -295,6 +310,7 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	var container classType.Container
 	container.Name = name
 	container.Image = image
+	container.Resources = resource
 	var containers [1]classType.Container
 	containers[0] = container
 	slice := []classType.Container{container}
@@ -319,4 +335,6 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	return b
 
 }
+
+
 

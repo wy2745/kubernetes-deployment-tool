@@ -8,6 +8,7 @@ import (
 	"io"
 	"fmt"
 	"bytes"
+	"strings"
 )
 
 func setBasicAuthOfCaicloud(r *http.Request) {
@@ -197,7 +198,7 @@ func DeleteUrl_test(url string, byte []byte) {
 	ioutil.ReadAll(resp.Body)
 }
 
-func CreatePod_test(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string) {
+func CreatePod_test(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string) {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -205,7 +206,7 @@ func CreatePod_test(namespace string, image string, name string, cpu_min string,
 	resource.Requests = make(map[classType.ResourceName]string)
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
-	byte := GeneratePodBody(namespace, image, name, resource)
+	byte := GeneratePodBody(namespace, image, name, resource, command)
 	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace)
 	//fmt.Print(url + "\n")
 	PostUrl_test(url, byte)
@@ -247,7 +248,7 @@ func DeleteReplicationController(namespace string, name string) {
 	DeleteUrl_test(url, nil)
 }
 
-func GeneratePodBody(namespace string, image string, name string, resource classType.ResourceRequirements) []byte {
+func GeneratePodBody(namespace string, image string, name string, resource classType.ResourceRequirements, command string) []byte {
 	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
@@ -263,6 +264,7 @@ func GeneratePodBody(namespace string, image string, name string, resource class
 	container.Name = name
 	container.Image = image
 	container.Resources = resource
+	container.Command = strings.Split(command, " ")
 	var containers [1]classType.Container
 	containers[0] = container
 	var pod classType.Pod
@@ -354,6 +356,16 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	//fmt.Print(string(b))
 	return b
 
+}
+func PodComplete(pod classType.Pod) bool {
+	//fmt.Println("pod寻找结果：", len(pod.Name) == 0)
+	if len(pod.Status.ContainerStatuses) != 0 {
+		//fmt.Println("ready:", pod.Status.ContainerStatuses[0].Ready)
+		//fmt.Println("status:", pod.Status.Phase)
+		//fmt.Println("结果:", len(pod.Name) == 0 || (pod.Status.ContainerStatuses[0].Ready == false && pod.Status.Phase == "Running"))
+		return len(pod.Name) == 0 || (pod.Status.ContainerStatuses[0].Ready == false && pod.Status.Phase == "Running")
+	}
+	return len(pod.Name) == 0
 }
 
 

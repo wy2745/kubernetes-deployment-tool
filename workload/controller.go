@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"bufio"
 	"os"
+	"strings"
 	Request "../request"
 	"time"
 )
@@ -12,6 +13,8 @@ import (
 const (
 	cpu string = "m"
 	mem string = "Gi"
+	short_general string = "docker.io/zilinglius/workload:short-general"
+	short_cpu_bound string = "docker.io/zilinglius/workload:short-cpu-bound"
 )
 
 type WorkLoad struct {
@@ -23,6 +26,11 @@ type WorkloadController struct {
 	Total     *WorkLoad
 	LongTerm  *WorkLoad
 	ShortTerm *WorkLoad
+}
+
+func escapeMysqlQuery(path string) string {
+	str := strings.Replace(path, "./", "\"./", 1)
+	return str + "\""
 }
 
 func MissionRecord() {
@@ -75,30 +83,57 @@ func MissionRecord() {
 		var WL *WorkloadController
 		WL = NewWorkLoadController(TotalCpu, TotalMem, float32(ShortCpuRate), float32(ShortMemRate))
 		WorkLoadDisplay(WL)
-		fmt.Print("部署长时任务")
-		Request.CreatePod_test("default", "mysql:5.7", "mysql----test", WL.LongTerm.cpuWorkLoad, WL.LongTerm.cpuWorkLoad, WL.LongTerm.memWorkLoad, WL.LongTerm.memWorkLoad)
+		fmt.Println("部署长时任务")
+		Request.CreatePod_test("default", short_general, "test1", WL.LongTerm.cpuWorkLoad, WL.LongTerm.cpuWorkLoad, WL.LongTerm.memWorkLoad, WL.LongTerm.memWorkLoad, "./home/ws 20000000")
 		//为了测试，先删掉刚创建好的Pod
-		Request.DeletePod("default", "mysql----test")
-		fmt.Print("部署短时任务")
+		Request.DeletePod("default", "test1")
+		fmt.Println("部署短时任务")
 		//没有拿到对应的image之前，先模拟一下短时任务的生命周期
-		var t time.Time
-		t1 := time.NewTicker(time.Millisecond * 1000)
+		resultChan := make(chan string)
+
+
+		//var t time.Time
+		//t1 := time.NewTicker(time.Millisecond * 2000)
+		//go func() {
+		//	for t = range t1.C {
+		//		if Request.PodComplete(Request.GetPodByNameAndNamespace("default", "test")) {
+		//			fmt.Print("继续创建\n\n\n")
+		//			Request.DeletePod("default", "test")
+		//			Request.CreatePod_test("default", short_cpu_bound, "test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad, "./home/wsc 100 1000")
+		//		}
+		//		//else {
+		//		//					fmt.Print("短时任务结束\n\n\n")
+		//		//					Request.DeletePod("default", "mysql----test")
+		//		//				}
+		//	}
+		//}()
+
 		go func() {
-			for t = range t1.C {
-				if len(Request.GetPodByNameAndNamespace("default", "mysql----test").Name) == 0 {
-					fmt.Print("继续创建\n\n\n")
-					Request.CreatePod_test("default", "mysql:5.7", "mysql----test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad)
-				} else {
-					fmt.Print("短时任务结束\n\n\n")
-					Request.DeletePod("default", "mysql----test")
+			for {
+
+				if Request.PodComplete(Request.GetPodByNameAndNamespace("default", "test")) {
+					fmt.Print("不存在，需要创建\n\n\n")
+					resultChan <- "1"
+					time.Sleep(time.Second * 3)
 				}
+
 			}
 		}()
-		fmt.Print("输入任何字符以结束:")
+		go func() {
+			for {
+				<-resultChan
+				fmt.Println("正在删除旧pod")
+				Request.DeletePod("default", "test")
+				fmt.Println("正在创建新pod")
+				Request.CreatePod_test("default", short_cpu_bound, "test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad, "./home/wsc 100 1000")
+
+			}
+		}()
+		fmt.Print("输入任何字符以结束:\n")
 		scanner.Scan()
 		line = scanner.Text()
-		t1.Stop()
-		Request.DeletePod("default", "mysql----test")
+		//t1.Stop()
+		Request.DeletePod("default", "test")
 	}
 
 }

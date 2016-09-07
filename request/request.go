@@ -172,9 +172,9 @@ func PostUrl_test(url string, byte []byte) {
 
 	//fmt.Println("response Status:", resp.Status)
 	//fmt.Println("response Headers:", resp.Header)
-	ioutil.ReadAll(resp.Body)
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println("response Body:", string(body))
+	//ioutil.ReadAll(resp.Body)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
 }
 func DeleteUrl_test(url string, byte []byte) {
 	//fmt.Print(url)

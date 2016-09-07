@@ -12,14 +12,17 @@ import (
 
 const (
 	cpu string = "m"
-	mem string = "Gi"
+	mem_G string = "Gi"
+	mem_M string = "Mi"
 	short_general string = "docker.io/zilinglius/workload:short-general"
 	short_cpu_bound string = "docker.io/zilinglius/workload:short-cpu-bound"
 )
 
 type WorkLoad struct {
-	cpuWorkLoad string
-	memWorkLoad string
+	cpuWorkLoad     string
+	memWorkLoad     string
+	cpuWorkLoad_int int
+	memWorkLoad_int int
 }
 
 type WorkloadController struct {
@@ -53,7 +56,7 @@ func MissionRecord() {
 			TotalCpu, err = strconv.Atoi(line)
 
 		}
-		fmt.Print("\n总负载Mem(单位:Gi 整数):")
+		fmt.Print("\n总负载Mem(单位:Mi 整数):")
 		scanner.Scan()
 		line = scanner.Text()
 		for TotalMem, err = strconv.Atoi(line); err != nil; err = nil {
@@ -88,60 +91,93 @@ func MissionRecord() {
 		//为了测试，先删掉刚创建好的Pod
 		Request.DeletePod("default", "test1")
 		fmt.Println("部署短时任务")
-		//没有拿到对应的image之前，先模拟一下短时任务的生命周期
-		resultChan := make(chan string)
+		//resultChan := make(chan string)
 
 
-		//var t time.Time
-		//t1 := time.NewTicker(time.Millisecond * 2000)
+		//每个cpu-bound占用10M内存，目前暂时用0.4个cpu
+		//目前暂时考虑负载mem = 10*n  cpu = 400*n n是同一个数
+		//TODO:根据负载，调整短期任务的内存和cpu占用，以保证能够通过整数数量的短期任务来满足负载
+		memUse := 10
+		cpuUse := 400
+
+		boundNum := WL.ShortTerm.cpuWorkLoad_int / cpuUse
+		var podNames []string
+		//建立channel组，分别监听
+		var resultChans [] chan string
+		//生成并记录pod组的名称
+		for index := 0; index < boundNum; index++ {
+			podName := "test" + strconv.Itoa(index)
+			append(podNames, podName)
+			resultChan := make(chan string)
+			append(resultChans, resultChan)
+			go func() {
+				for {
+					podName := <-resultChan
+					fmt.Println("正在删除旧pod: ", podName)
+					Request.DeletePod("default", podName)
+					fmt.Println("正在创建新pod: ", podName)
+					Request.CreatePod_test("default", short_cpu_bound, podName, cpuUse, cpuUse, memUse, memUse, "./home/wsc 100 1000")
+
+				}
+			}()
+		}
+
 		//go func() {
-		//	for t = range t1.C {
+		//	for {
+		//
 		//		if Request.PodComplete(Request.GetPodByNameAndNamespace("default", "test")) {
-		//			fmt.Print("继续创建\n\n\n")
-		//			Request.DeletePod("default", "test")
-		//			Request.CreatePod_test("default", short_cpu_bound, "test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad, "./home/wsc 100 1000")
+		//			fmt.Print("不存在，需要创建\n\n\n")
+		//			resultChan <- "1"
+		//			time.Sleep(time.Second * 3)
 		//		}
-		//		//else {
-		//		//					fmt.Print("短时任务结束\n\n\n")
-		//		//					Request.DeletePod("default", "mysql----test")
-		//		//				}
+		//
+		//	}
+		//}()
+		//go func() {
+		//	for {
+		//		<-resultChan
+		//		fmt.Println("正在删除旧pod")
+		//		Request.DeletePod("default", "test")
+		//		fmt.Println("正在创建新pod")
+		//		Request.CreatePod_test("default", short_cpu_bound, "test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad, "./home/wsc 100 1000")
+		//
 		//	}
 		//}()
 
-		go func() {
-			for {
+		//构建一个新的检查pod组运行情况的go func，基本思想，建立多个线程，负责单一检查某个pod的运行状态，另外建一个线程负责收听pod的运行状态，重建pod
+		for index, podName := range podNames {
+			go func() {
+				for {
 
-				if Request.PodComplete(Request.GetPodByNameAndNamespace("default", "test")) {
-					fmt.Print("不存在，需要创建\n\n\n")
-					resultChan <- "1"
-					time.Sleep(time.Second * 3)
+					if Request.PodComplete(Request.GetPodByNameAndNamespace("default", podName)) {
+						fmt.Print("不存在，需要创建\n\n\n")
+						resultChans[index] <- podName
+						time.Sleep(time.Second * 3)
+					}
+
 				}
+			}()
+		}
 
-			}
-		}()
-		go func() {
-			for {
-				<-resultChan
-				fmt.Println("正在删除旧pod")
-				Request.DeletePod("default", "test")
-				fmt.Println("正在创建新pod")
-				Request.CreatePod_test("default", short_cpu_bound, "test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad, "./home/wsc 100 1000")
-
-			}
-		}()
 		fmt.Print("输入任何字符以结束:\n")
 		scanner.Scan()
 		line = scanner.Text()
 		//t1.Stop()
-		Request.DeletePod("default", "test")
+		//Request.DeletePod("default", "test")
+		for index := 0; index < boundNum; index++ {
+			podName := "test" + strconv.Itoa(index)
+			Request.DeletePod("default", podName)
+		}
 	}
 
 }
 
-func NewWorkLoad(cpu string, mem string) *WorkLoad {
+func NewWorkLoad(cpu string, mem string, cpu_int int, mem_int int) *WorkLoad {
 	w := WorkLoad{
 		cpuWorkLoad:cpu,
 		memWorkLoad:mem,
+		cpuWorkLoad_int:cpu_int,
+		memWorkLoad_int:mem_int,
 	}
 	return &w
 }
@@ -154,9 +190,9 @@ func NewWorkLoadController(TotalCpu int, TotalMem int, ShortCpuRate float32, Sho
 	longCpu := strconv.Itoa(TotalCpu - shortCpu_int)
 	longMem := strconv.Itoa(TotalMem - shortMem_int)
 	s := WorkloadController{
-		Total : NewWorkLoad(strconv.Itoa(TotalCpu) + cpu, strconv.Itoa(TotalMem) + mem),
-		LongTerm:NewWorkLoad(longCpu + cpu, longMem + mem),
-		ShortTerm:NewWorkLoad(shortCpu + cpu, shortMem + mem),
+		Total : NewWorkLoad(strconv.Itoa(TotalCpu) + cpu, strconv.Itoa(TotalMem) + mem_M, TotalCpu, TotalMem),
+		LongTerm:NewWorkLoad(longCpu + cpu, longMem + mem_M, TotalCpu - shortCpu_int, TotalMem - shortMem_int),
+		ShortTerm:NewWorkLoad(shortCpu + cpu, shortMem + mem_M, shortCpu_int, shortMem_int),
 	}
 
 	return &s

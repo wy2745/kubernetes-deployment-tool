@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	//Request "./request"
 	WorkLoadController "./workload"
 )
 
@@ -12,10 +13,11 @@ func main() {
 	//Request.GetPodsOfNamespace_Test("default")
 	//Request.CreateService_test("mysql-service", "mysql----test", "default", 3302)
 	//Request.DeleteService("default", "mysql-service")
-	//Request.DeletePod("default", "mysql----test")
+	//Request.DeletePod("default", "test0", Request.Caicloud)
 	//Request.GenerateServiceBody("mysql-service", "mysql----test", "default", 3302)
 	WorkLoadController.MissionRecord()
 	//Request.GetAllService_Test("default")
+	//Request.GetAllService("default", Request.Caicloud)
 	fmt.Println("tick tick stop")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

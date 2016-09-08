@@ -86,10 +86,10 @@ func MissionRecord() {
 		var WL *WorkloadController
 		WL = NewWorkLoadController(TotalCpu, TotalMem, float32(ShortCpuRate), float32(ShortMemRate))
 		WorkLoadDisplay(WL)
-		fmt.Println("部署长时任务")
-		Request.CreatePod_test("default", short_general, "test1", WL.LongTerm.cpuWorkLoad, WL.LongTerm.cpuWorkLoad, WL.LongTerm.memWorkLoad, WL.LongTerm.memWorkLoad, "./home/ws 20000000")
-		//为了测试，先删掉刚创建好的Pod
-		Request.DeletePod("default", "test1")
+		//fmt.Println("部署长时任务")
+		//Request.CreatePod("default", short_general, "test1", WL.LongTerm.cpuWorkLoad, WL.LongTerm.cpuWorkLoad, WL.LongTerm.memWorkLoad, WL.LongTerm.memWorkLoad, "./home/ws 20000000", Request.Caicloud)
+		////为了测试，先删掉刚创建好的Pod
+		//Request.DeletePod("default", "test1", Request.Caicloud)
 		fmt.Println("部署短时任务")
 		//resultChan := make(chan string)
 
@@ -101,22 +101,46 @@ func MissionRecord() {
 		cpuUse := 400
 
 		boundNum := WL.ShortTerm.cpuWorkLoad_int / cpuUse
+		fmt.Println("size: ", boundNum)
 		var podNames []string
 		//建立channel组，分别监听
 		var resultChans [] chan string
+		var quitWorkLoaders []chan string
+		var quitMoinitors [] chan string
 		//生成并记录pod组的名称
 		for index := 0; index < boundNum; index++ {
-			podName := "test" + strconv.Itoa(index)
-			append(podNames, podName)
+			var ind int
+			var pon string
+			ind = index
+			podName := "test" + strconv.Itoa(ind)
+			fmt.Println(podName)
+			podNames = append(podNames, podName)
 			resultChan := make(chan string)
-			append(resultChans, resultChan)
+			resultChans = append(resultChans, resultChan)
+			quitWorkLoader := make(chan string)
+			quitWorkLoaders = append(quitWorkLoaders, quitWorkLoader)
+			quitMoinitor := make(chan string)
+			quitMoinitors = append(quitMoinitors, quitMoinitor)
+
 			go func() {
 				for {
-					podName := <-resultChan
-					fmt.Println("正在删除旧pod: ", podName)
-					Request.DeletePod("default", podName)
-					fmt.Println("正在创建新pod: ", podName)
-					Request.CreatePod_test("default", short_cpu_bound, podName, cpuUse, cpuUse, memUse, memUse, "./home/wsc 100 1000")
+					select {
+					case pon = <-resultChan:
+						fmt.Println("正在删除旧pod: ", pon)
+						Request.DeletePod("default", pon, Request.Caicloud)
+						fmt.Println("正在创建新pod: ", pon)
+						Request.CreatePod("default", short_cpu_bound, pon, strconv.Itoa(cpuUse) + cpu, strconv.Itoa(cpuUse) + cpu, strconv.Itoa(memUse) + mem_M, strconv.Itoa(memUse) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
+					case <-quitWorkLoader:
+						fmt.Println("进程杀死", ind)
+						return
+					default:
+						continue
+					}
+					//podName := <-resultChan
+					//fmt.Println("正在删除旧pod: ", podName)
+					//Request.DeletePod("default", podName, Request.Caicloud)
+					//fmt.Println("正在创建新pod: ", podName)
+					//Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(cpuUse) + cpu, strconv.Itoa(cpuUse) + cpu, strconv.Itoa(memUse) + mem_M, strconv.Itoa(memUse) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
 
 				}
 			}()
@@ -146,14 +170,29 @@ func MissionRecord() {
 
 		//构建一个新的检查pod组运行情况的go func，基本思想，建立多个线程，负责单一检查某个pod的运行状态，另外建一个线程负责收听pod的运行状态，重建pod
 		for index, podName := range podNames {
+			var ind int
+			var pon string
+			pon = podName
+			ind = index
 			go func() {
 				for {
-
-					if Request.PodComplete(Request.GetPodByNameAndNamespace("default", podName)) {
-						fmt.Print("不存在，需要创建\n\n\n")
-						resultChans[index] <- podName
-						time.Sleep(time.Second * 3)
+					select {
+					case <-quitMoinitors[ind]:
+						fmt.Println("进程杀死", ind)
+						return
+					default:
+						if Request.PodComplete(Request.GetPodByNameAndNamespace("default", pon, Request.Caicloud)) {
+							fmt.Print("不存在，需要创建\n\n\n")
+							resultChans[ind] <- pon
+							time.Sleep(time.Second * 3)
+						}
 					}
+
+					//if Request.PodComplete(Request.GetPodByNameAndNamespace("default", podName, Request.Caicloud)) {
+					//	fmt.Print("不存在，需要创建\n\n\n")
+					//	resultChans[index] <- podName
+					//	time.Sleep(time.Second * 3)
+					//}
 
 				}
 			}()
@@ -165,8 +204,10 @@ func MissionRecord() {
 		//t1.Stop()
 		//Request.DeletePod("default", "test")
 		for index := 0; index < boundNum; index++ {
+			quitMoinitors[index] <- "q"
+			quitWorkLoaders[index] <- "q"
 			podName := "test" + strconv.Itoa(index)
-			Request.DeletePod("default", podName)
+			Request.DeletePod("default", podName, Request.Caicloud)
 		}
 	}
 

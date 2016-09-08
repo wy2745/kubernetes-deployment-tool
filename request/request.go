@@ -5,20 +5,34 @@ import (
 	jsonParse "../json"
 	classType "../type"
 	"io/ioutil"
-	"io"
 	"fmt"
 	"bytes"
 	"strings"
+)
+
+const (
+	Test string = "test"
+	Caicloud string = "caicloud"
 )
 
 func setBasicAuthOfCaicloud(r *http.Request) {
 	r.SetBasicAuth(userName, password)
 }
 
-func InvokeRequest_Caicloud(method string, url string, body io.Reader) *http.Response {
+func InvokeRequest_Caicloud(method string, url string, body []byte) *http.Response {
 	client := http.Client{}
-	req, err := http.NewRequest(method, url, body)
+	var req *http.Request
+	var err error
+	if body != nil {
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
+	} else {
+		req, err = http.NewRequest(method, url, nil)
+	}
+
 	setBasicAuthOfCaicloud(req)
+	if method != "GET" {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Print(err)
@@ -35,8 +49,13 @@ func InvokeGetReuqest(url string) *http.Response {
 	return resp
 }
 
-func GetAllNode_Caicloud() {
-	resp := InvokeRequest_Caicloud("GET", destinationServer_Caicloud + GetNodeList_GET, nil)
+func GetAllNode(mode string) {
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + GetNodeList_GET)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + GetNodeList_GET, nil)
+	}
 	if (resp != nil) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -52,25 +71,13 @@ func GetAllNode_Caicloud() {
 	}
 }
 
-func GetAllNode_Test() {
-	resp := InvokeGetReuqest(destinationServer_Test + GetNodeList_GET)
-	if (resp != nil) {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if (err != nil) {
-			fmt.Print(err)
-			return
-		}
-		var v classType.NodeList
-		jsonParse.JsonUnmarsha(body, &v)
-		//for _, item := range v.Items {
-		//	classType.PrintNode(item)
-		//}
+func GetAllNamespace(mode string) {
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + GetNamespaces_GET)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + GetNamespaces_GET, nil)
 	}
-}
-
-func GetAllNamespace_Test() {
-	resp := InvokeGetReuqest(destinationServer_Test + GetNamespaces_GET)
 	if (resp != nil) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -86,8 +93,13 @@ func GetAllNamespace_Test() {
 	}
 }
 
-func GetAllReplicationcontrollers_Test() {
-	resp := InvokeGetReuqest(destinationServer_Test + ReadAllReplicationController_GET)
+func GetAllReplicationcontrollers(mode string) {
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + ReadAllReplicationController_GET)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + ReadAllReplicationController_GET, nil)
+	}
 	if (resp != nil) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -103,8 +115,14 @@ func GetAllReplicationcontrollers_Test() {
 	}
 }
 
-func GetAllService_Test(namespace string) {
-	resp := InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
+func GetAllService(namespace string, mode string) {
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + ReadAllService_GET, nil)
+	}
+
 	if (resp != nil) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -114,15 +132,21 @@ func GetAllService_Test(namespace string) {
 		}
 		var v classType.ServiceList
 		jsonParse.JsonUnmarsha(body, &v)
-		//for _, item := range v.Items {
-		//	classType.PrintService(item)
-		//}
+		for _, item := range v.Items {
+			classType.PrintService(item)
+		}
 	}
 }
 
-func GetPodsOfNamespace_Test(namespace string) {
+func GetPodsOfNamespace(namespace string, mode string) {
+	var resp *http.Response
 	str := GeneratePodNamespaceUrl(namespace)
-	resp := InvokeGetReuqest(destinationServer_Test + str)
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
+
 	if (resp != nil) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -138,10 +162,17 @@ func GetPodsOfNamespace_Test(namespace string) {
 	}
 }
 
-func GetPodByNameAndNamespace(namespace string, name string) classType.Pod {
+func GetPodByNameAndNamespace(namespace string, name string, mode string) classType.Pod {
 	var v classType.Pod
 	str := GeneratePodNameUrl(namespace, name)
-	resp := InvokeGetReuqest(destinationServer_Test + str)
+
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
+
 	if (resp != nil) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
@@ -173,9 +204,10 @@ func PostUrl_test(url string, byte []byte) {
 	//fmt.Println("response Status:", resp.Status)
 	//fmt.Println("response Headers:", resp.Header)
 	//ioutil.ReadAll(resp.Body)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	//body, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Println("response Body:", string(body))
 }
+
 func DeleteUrl_test(url string, byte []byte) {
 	//fmt.Print(url)
 	req, err := http.NewRequest("DELETE", url, nil)
@@ -198,7 +230,7 @@ func DeleteUrl_test(url string, byte []byte) {
 	ioutil.ReadAll(resp.Body)
 }
 
-func CreatePod_test(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string) {
+func CreatePod(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -207,19 +239,34 @@ func CreatePod_test(namespace string, image string, name string, cpu_min string,
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
 	byte := GeneratePodBody(namespace, image, name, resource, command)
-	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace)
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GeneratePodNamespaceUrl(namespace)
+		PostUrl_test(url, byte)
+	} else {
+		url = destinationServer_Caicloud + GeneratePodNamespaceUrl(namespace)
+		InvokeRequest_Caicloud("POST", url, byte)
+	}
+
 	//fmt.Print(url + "\n")
-	PostUrl_test(url, byte)
+
 }
 
-func CreateService_test(name string, label_name string, namespace string, port int32) {
+func CreateService(name string, label_name string, namespace string, port int32, mode string) {
 	byte := GenerateServiceBody(name, label_name, namespace, port)
-	url := destinationServer_Test + GenerateServiceListNamespaceUrl(namespace)
-	//fmt.Print(url + "\n")
-	PostUrl_test(url, byte)
+
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateServiceListNamespaceUrl(namespace)
+		PostUrl_test(url, byte)
+	} else {
+		url = destinationServer_Caicloud + GenerateServiceListNamespaceUrl(namespace)
+		InvokeRequest_Caicloud("POST", url, byte)
+	}
+
 }
 
-func CreateReplicationController_test(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string) {
+func CreateReplicationController_test(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string, mode string) {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -228,24 +275,52 @@ func CreateReplicationController_test(namespace string, image string, name strin
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
 	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic, resource)
-	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace)
-	//fmt.Print(url + "\n")
-	PostUrl_test(url, byte)
+
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace)
+		PostUrl_test(url, byte)
+	} else {
+		url = destinationServer_Caicloud + GenerateReplicationControllerNamespaceUrl(namespace)
+		InvokeRequest_Caicloud("POST", url, byte)
+	}
+
 }
 
-func DeletePod(namespace string, name string) {
-	url := destinationServer_Test + GeneratePodNamespaceUrl(namespace) + "/" + name
-	DeleteUrl_test(url, nil)
+func DeletePod(namespace string, name string, mode string) {
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GeneratePodNamespaceUrl(namespace) + "/" + name
+		DeleteUrl_test(url, nil)
+	} else {
+		url = destinationServer_Caicloud + GeneratePodNamespaceUrl(namespace) + "/" + name
+		InvokeRequest_Caicloud("DELETE", url, nil)
+	}
+
 }
 
-func DeleteService(namespace string, name string) {
-	url := destinationServer_Test + GenerateServiceListNamespaceUrl(namespace) + "/" + name
-	DeleteUrl_test(url, nil)
+func DeleteService(namespace string, name string, mode string) {
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateServiceListNamespaceUrl(namespace) + "/" + name
+		DeleteUrl_test(url, nil)
+	} else {
+		url = destinationServer_Caicloud + GenerateServiceListNamespaceUrl(namespace) + "/" + name
+		InvokeRequest_Caicloud("DELETE", url, nil)
+	}
+
 }
 
-func DeleteReplicationController(namespace string, name string) {
-	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace) + "/" + name
-	DeleteUrl_test(url, nil)
+func DeleteReplicationController(namespace string, name string, mode string) {
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateReplicationControllerNamespaceUrl(namespace) + "/" + name
+		DeleteUrl_test(url, nil)
+	} else {
+		url = destinationServer_Caicloud + GenerateReplicationControllerNamespaceUrl(namespace) + "/" + name
+		InvokeRequest_Caicloud("DELETE", url, nil)
+	}
+
 }
 
 func GeneratePodBody(namespace string, image string, name string, resource classType.ResourceRequirements, command string) []byte {

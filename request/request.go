@@ -348,6 +348,7 @@ func GeneratePodBody(namespace string, image string, name string, resource class
 	//将container拷到pod.spec.containers
 	slice := []classType.Container{container}
 	pod.Spec.Containers = slice
+	pod.Spec.RestartPolicy = "Always"
 	b := jsonParse.JsonMarsha(pod)
 	//fmt.Print(string(b))
 	return b

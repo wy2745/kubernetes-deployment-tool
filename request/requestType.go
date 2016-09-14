@@ -29,13 +29,22 @@ const (
 	ReadAllReplicationController_GET string = "/api/v1/replicationcontrollers" //list or watch objects of kind ReplicationController
 	ReadReplicationControllerListOfNamespace_GET string = "/api/v1/namespaces/{namespace}/replicationcontrollers" //list or watch
 	// objects of kind ReplicationController
+
+	extensionApiNamespace string = "/apis/batch/v1/namespaces"
+	ReadAllJob_GET string = "/apis/batch/v1/jobs"
 )
 
 func GeneratePodNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/pods"
 }
+func GenerateJobNamespaceUrl(namespace string) string {
+	return extensionApiNamespace + "/" + namespace + "/jobs"
+}
 func GeneratePodNameUrl(namespace string, name string) string {
 	return GetNamespaces_GET + "/" + namespace + "/pods" + "/" + name
+}
+func GenerateJobNameUrl(namespace string, name string) string {
+	return extensionApiNamespace + "/" + namespace + "/jobs" + "/" + name
 }
 func GenerateServiceListNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/services"

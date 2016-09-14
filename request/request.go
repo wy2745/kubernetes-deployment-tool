@@ -34,6 +34,9 @@ func InvokeRequest_Caicloud(method string, url string, body []byte) *http.Respon
 		req.Header.Set("Content-Type", "application/json")
 	}
 	resp, err := client.Do(req)
+	fmt.Println(resp.Header)
+	fmt.Println(resp.Status)
+	fmt.Println(resp.StatusCode)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -115,12 +118,104 @@ func GetAllReplicationcontrollers(mode string) {
 	}
 }
 
-func GetAllService(namespace string, mode string) {
+func GetAllJobs(mode string) {
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + ReadAllJob_GET)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + ReadAllJob_GET, nil)
+	}
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.JobList
+		jsonParse.JsonUnmarsha(body, &v)
+		fmt.Println(v.APIVersion)
+		fmt.Println(v.SelfLink)
+		fmt.Println(v.ResourceVersion)
+		for _, item := range v.Items {
+			classType.PrintJob(item)
+		}
+	}
+}
+
+func GetJobOfNamespace(namespace string, mode string) {
+	var resp *http.Response
+	str := GenerateJobNamespaceUrl(namespace)
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.JobList
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, item := range v.Items {
+			classType.PrintJob(item)
+		}
+	}
+}
+func GetJobByNameAndNamespace(namespace string, name string, mode string) {
+	var resp *http.Response
+	str := GenerateJobNameUrl(namespace, name)
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.JobList
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, item := range v.Items {
+			classType.PrintJob(item)
+		}
+	}
+}
+func GetAllService(mode string) {
 	var resp *http.Response
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
 	} else {
 		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + ReadAllService_GET, nil)
+	}
+
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return
+		}
+		var v classType.ServiceList
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, item := range v.Items {
+			classType.PrintService(item)
+		}
+	}
+}
+func GetServicesOfNamespace(namespace string, mode string) {
+	var resp *http.Response
+	str := GenerateServiceListNamespaceUrl(namespace)
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
 	}
 
 	if (resp != nil) {
@@ -251,6 +346,28 @@ func CreatePod(namespace string, image string, name string, cpu_min string, cpu_
 	//fmt.Print(url + "\n")
 
 }
+func CreateJob(namespace string, image string, name string, completion int32, parallelism int32, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {
+	var resource classType.ResourceRequirements
+	resource.Limits = make(map[classType.ResourceName]string)
+	resource.Limits["cpu"] = cpu_max
+	resource.Limits["memory"] = mem_max
+	resource.Requests = make(map[classType.ResourceName]string)
+	resource.Requests["cpu"] = cpu_min
+	resource.Requests["memory"] = mem_min
+	byte := GenerateJobBody(namespace, name, image, completion, parallelism, command, resource)
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateJobNamespaceUrl(namespace)
+		PostUrl_test(url, byte)
+	} else {
+		url = destinationServer_Caicloud + GenerateJobNamespaceUrl(namespace)
+		InvokeRequest_Caicloud("POST", url, byte)
+	}
+
+	//fmt.Print(url + "\n")
+	//fmt.Println(string(byte))
+
+}
 
 func CreateService(name string, label_name string, namespace string, port int32, mode string) {
 	byte := GenerateServiceBody(name, label_name, namespace, port)
@@ -266,7 +383,7 @@ func CreateService(name string, label_name string, namespace string, port int32,
 
 }
 
-func CreateReplicationController_test(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string, mode string) {
+func CreateReplicationController(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string, mode string) {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -290,13 +407,24 @@ func CreateReplicationController_test(namespace string, image string, name strin
 func DeletePod(namespace string, name string, mode string) {
 	var url string
 	if mode == Test {
-		url = destinationServer_Test + GeneratePodNamespaceUrl(namespace) + "/" + name
+		url = destinationServer_Test + GeneratePodNameUrl(namespace, name)
 		DeleteUrl_test(url, nil)
 	} else {
-		url = destinationServer_Caicloud + GeneratePodNamespaceUrl(namespace) + "/" + name
+		url = destinationServer_Caicloud + GeneratePodNameUrl(namespace, name)
 		InvokeRequest_Caicloud("DELETE", url, nil)
 	}
 
+}
+
+func DeleteJob(namespace string, name string, mode string) {
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateJobNameUrl(namespace, name)
+		DeleteUrl_test(url, nil)
+	} else {
+		url = destinationServer_Caicloud + GenerateJobNameUrl(namespace, name)
+		InvokeRequest_Caicloud("DELETE", url, nil)
+	}
 }
 
 func DeleteService(namespace string, name string, mode string) {
@@ -320,6 +448,41 @@ func DeleteReplicationController(namespace string, name string, mode string) {
 		url = destinationServer_Caicloud + GenerateReplicationControllerNamespaceUrl(namespace) + "/" + name
 		InvokeRequest_Caicloud("DELETE", url, nil)
 	}
+
+}
+func GenerateJobBody(namespace string, name string, image string, completion int32, Parallelism int32, command string, resource classType.ResourceRequirements) []byte {
+	var typeMeta classType.TypeMeta
+	typeMeta.APIVersion = "batch/v1"
+	typeMeta.Kind = "Job"
+	var objectMeta classType.ObjectMeta
+	objectMeta.Name = name
+	objectMeta.Namespace = namespace
+
+	var jobSpec classType.JobSpec
+	jobSpec.Parallelism = &Parallelism
+	jobSpec.Completions = &completion
+	jobSpec.Template.Name = name
+	var container classType.Container
+	container.Name = name
+	container.Image = image
+	container.Resources = resource
+	container.Command = strings.Split(command, " ")
+	var containers [1]classType.Container
+	containers[0] = container
+
+	jobSpec.Template.Name = name
+	slice := []classType.Container{container}
+	jobSpec.Template.Spec.Containers = slice
+	var job classType.Job
+	job.TypeMeta = typeMeta
+	job.ObjectMeta = objectMeta
+	job.Spec = jobSpec
+	job.Spec.Template.Spec.RestartPolicy = "Never"
+	b := jsonParse.JsonMarsha(job)
+
+	//fmt.Println("jaja")
+	//fmt.Println(string(b))
+	return b
 
 }
 

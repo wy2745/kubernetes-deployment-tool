@@ -1146,6 +1146,14 @@ type Node struct {
 	Status NodeStatus `json:"status,omitempty"`
 }
 
+func PrintJob(job Job) {
+	fmt.Println("Job Message:")
+	fmt.Println("Job Object: ", job.ObjectMeta)
+	fmt.Println("Job TypeMeta:", job.TypeMeta)
+	fmt.Println("Job Spec:", job.Spec)
+	fmt.Println("Job Status", job.Status)
+}
+
 func PrintReplicationController(replicationcontroller ReplicationController) {
 	fmt.Print("Replicationcontroller Message:\n")
 	fmt.Print("ReplicationcontrollerName: " + replicationcontroller.Name + "\n")
@@ -1734,12 +1742,12 @@ type JobStatus struct {
 	// StartTime represents time when the job was acknowledged by the Job Manager.
 	// It is not guaranteed to be set in happens-before order across separate operations.
 	// It is represented in RFC3339 form and is in UTC.
-	StartTime      Time `json:"startTime,omitempty"`
+	StartTime      string `json:"startTime,omitempty"`
 
 	// CompletionTime represents time when the job was completed. It is not guaranteed to
 	// be set in happens-before order across separate operations.
 	// It is represented in RFC3339 form and is in UTC.
-	CompletionTime *Time `json:"completionTime,omitempty"`
+	CompletionTime *string `json:"completionTime,omitempty"`
 
 	// Active is the number of actively running pods.
 	Active         int32 `json:"active,omitempty"`

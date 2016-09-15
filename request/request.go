@@ -403,7 +403,6 @@ func CreateJobWithoutResource(namespace string, image string, name string, compl
 		PostUrl_test(url, byte)
 	} else {
 		url = destinationServer_Caicloud + GenerateJobNamespaceUrl(namespace)
-		fmt.Println(url)
 		InvokeRequest_Caicloud("POST", url, byte)
 	}
 }

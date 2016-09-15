@@ -17,6 +17,8 @@ const (
 	short_general string = "docker.io/zilinglius/workload:short-general"
 	short_cpu_bound string = "docker.io/zilinglius/workload:short-cpu-bound"
 	shortTermWorkCompletion int32 = 1000
+	cpu_Use = 400
+	mem_Use = 10
 )
 
 type WorkLoad struct {
@@ -26,15 +28,125 @@ type WorkLoad struct {
 	memWorkLoad_int int
 }
 
+type channel []chan string
+
 type WorkloadController struct {
-	Total     *WorkLoad
-	LongTerm  *WorkLoad
-	ShortTerm *WorkLoad
+	Total      *WorkLoad
+	LongTerm   *WorkLoad
+	ShortTerm  *WorkLoad
+	JobMonitor *channel
+	JobWorker  *channel
+	JobNum     int
+	JobName    []string
+}
+
+func Start() {
+	//var WL *WorkloadController
+	var line string
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		var WL *WorkloadController
+		scanner.Scan()
+		fmt.Println("^_^")
+		fmt.Println("1.查看jobs状态")
+		fmt.Println("2.设定WorkLoad参数并部署任务")
+		fmt.Println("3.停止所有任务")
+		line = scanner.Text()
+		switch line {
+		case "1":
+			fmt.Println("1")
+			GetJobStatus(WL)
+		case "2":
+			fmt.Println("2")
+		case "3":
+			fmt.Println("3")
+		}
+	}
 }
 
 func escapeMysqlQuery(path string) string {
 	str := strings.Replace(path, "./", "\"./", 1)
 	return str + "\""
+}
+
+func GetJobStatus(WL *WorkloadController) {
+	if WL == nil || len(*WL.JobName == 0) {
+		fmt.Println("目前没有在运行的任务")
+		return
+	}
+	for _, jobName := range *WL.JobName {
+		job := Request.GetJobByNameAndNamespace("default", jobName, Request.Caicloud)
+		fmt.Println("----JobName: ", job.Name)
+		fmt.Println("    actice: ", job.Status.Active)
+		fmt.Println("    succeeded: ", job.Status.Succeeded)
+		fmt.Println("    failed: ", job.Status.Failed)
+		if job.Spec.Completions == job.Status.Succeeded {
+			fmt.Println("Status: Finished.")
+		} else {
+			fmt.Println("Status: Not Finished.")
+		}
+		fmt.Println("----total: ", job.Spec.Completions, " finished: ", job.Status.Succeeded)
+	}
+}
+
+func record(scanner *bufio.Scanner, WL *WorkloadController) {
+	fmt.Print("^_^\n")
+	fmt.Print("请输入总负载信息\n")
+	fmt.Print("总负载Cpu(单位:m 整数):")
+	var TotalCpu, TotalMem int
+	var ShortCpuRate, ShortMemRate float64
+	var err error
+	var line string
+	scanner.Scan()
+	line = scanner.Text()
+
+	for TotalCpu, err = strconv.Atoi(line); err != nil; {
+		fmt.Print("必须输入整数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		TotalCpu, err = strconv.Atoi(line)
+
+	}
+	fmt.Print("\n总负载Mem(单位:Mi 整数):")
+	scanner.Scan()
+	line = scanner.Text()
+	for TotalMem, err = strconv.Atoi(line); err != nil; err = nil {
+		fmt.Print("必须输入整数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		TotalMem, err = strconv.Atoi(line)
+	}
+	fmt.Print("\n短时任务负载Cpu比例(小数):")
+	scanner.Scan()
+	line = scanner.Text()
+	for ShortCpuRate, err = strconv.ParseFloat(line, 32); err != nil || ShortCpuRate > 1; err = nil {
+		fmt.Print("必须输入小于等于1的小数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		ShortCpuRate, err = strconv.ParseFloat(line, 32)
+	}
+	fmt.Print("\n短时任务负载Mem比例(小数):")
+	scanner.Scan()
+	line = scanner.Text()
+	for ShortMemRate, err = strconv.ParseFloat(line, 32); err != nil || ShortMemRate > 1; err = nil {
+		fmt.Print("必须输入小于等于1的小数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		ShortMemRate, err = strconv.ParseFloat(line, 32)
+	}
+	WL = NewWorkLoadController(TotalCpu, TotalMem, float32(ShortCpuRate), float32(ShortMemRate))
+	WorkLoadDisplay(WL)
+
+	fmt.Println("部署短时任务")
+
+	boundNum := WL.ShortTerm.cpuWorkLoad_int / cpu_Use
+	fmt.Println("size: ", boundNum)
+
+	UploadShortTermMissionV2(boundNum, WL)
+	fmt.Print("输入任何字符以结束:\n")
+	scanner.Scan()
+	line = scanner.Text()
+	EndShortTermWorkLoadV2(WL)
 }
 
 func MissionRecorder() {
@@ -114,6 +226,73 @@ func MissionRecorder() {
 
 	}
 }
+func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
+	*WL.JobNum = JobNum
+	var jobNames []string
+	//建立channel组，分别监听
+	var resultChans [] chan string
+	var quitWorkLoaders []chan string
+	var quitMoinitors [] chan string
+	//生成并记录job组的名称
+	for index := 0; index < JobNum; index++ {
+		var ind int
+		var pon string
+		ind = index
+		jobName := "test" + strconv.Itoa(ind)
+		fmt.Println(jobName)
+		jobNames = append(jobNames, jobName)
+		resultChan := make(chan string)
+		resultChans = append(resultChans, resultChan)
+		quitWorkLoader := make(chan string)
+		quitWorkLoaders = append(quitWorkLoaders, quitWorkLoader)
+		quitMoinitor := make(chan string)
+		quitMoinitors = append(quitMoinitors, quitMoinitor)
+
+		go func() {
+			for {
+				select {
+				case pon = <-resultChan:
+				//fmt.Println("正在删除旧pod: ", pon)
+					Request.DeleteJob("default", pon, Request.Caicloud)
+				//fmt.Println("正在创建新pod: ", pon)
+				//Request.CreateJob("default", short_cpu_bound, pon, 1000, strconv.Itoa(cpuMin) + cpu, strconv.Itoa(cpuMax) + cpu, strconv.Itoa(memMin) + mem_M, strconv.Itoa(memMax) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
+					Request.CreateJobWithoutResource("default", short_cpu_bound, pon, shortTermWorkCompletion, "./home/wsc 100 1000", Request.Caicloud)
+				case <-quitWorkLoader:
+					fmt.Println("进程杀死", ind)
+					return
+				default:
+					continue
+				}
+			}
+		}()
+	}
+	*WL.JobName = jobNames
+
+	//构建一个新的检查job组运行情况的go func，基本思想，建立多个线程，负责单一检查某个job的运行状态，另外建一个线程负责收听job的运行状态，重建job
+	for index, jobName := range jobNames {
+		var ind int
+		var jon string
+		jon = jobName
+		ind = index
+		go func() {
+			for {
+				select {
+				case <-quitMoinitors[ind]:
+					fmt.Println("进程杀死", ind)
+					return
+				default:
+					if !Request.JobExist("default", jon, Request.Caicloud) || Request.JobComplete(Request.GetJobByNameAndNamespace("default", jon, Request.Caicloud)) {
+						//fmt.Print("不存在，需要创建\n\n\n")
+						resultChans[ind] <- jon
+						time.Sleep(time.Second * 3)
+					}
+				}
+			}
+		}()
+	}
+	*WL.JobMonitor = quitMoinitors
+	*WL.JobWorker = quitWorkLoaders
+}
 
 func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memMax int) (*[]chan string, *[]chan string) {
 	var jobNames []string
@@ -140,9 +319,9 @@ func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memM
 			for {
 				select {
 				case pon = <-resultChan:
-					fmt.Println("正在删除旧pod: ", pon)
+				//fmt.Println("正在删除旧pod: ", pon)
 					Request.DeleteJob("default", pon, Request.Caicloud)
-					fmt.Println("正在创建新pod: ", pon)
+				//fmt.Println("正在创建新pod: ", pon)
 				//Request.CreateJob("default", short_cpu_bound, pon, 1000, strconv.Itoa(cpuMin) + cpu, strconv.Itoa(cpuMax) + cpu, strconv.Itoa(memMin) + mem_M, strconv.Itoa(memMax) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
 					Request.CreateJobWithoutResource("default", short_cpu_bound, pon, shortTermWorkCompletion, "./home/wsc 100 1000", Request.Caicloud)
 				case <-quitWorkLoader:
@@ -169,7 +348,7 @@ func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memM
 					return
 				default:
 					if !Request.JobExist("default", jon, Request.Caicloud) || Request.JobComplete(Request.GetJobByNameAndNamespace("default", jon, Request.Caicloud)) {
-						fmt.Print("不存在，需要创建\n\n\n")
+						//fmt.Print("不存在，需要创建\n\n\n")
 						resultChans[ind] <- jon
 						time.Sleep(time.Second * 3)
 					}
@@ -178,6 +357,15 @@ func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memM
 		}()
 	}
 	return &quitWorkLoaders, &quitMoinitors
+}
+
+func EndShortTermWorkLoadV2(WL *WorkloadController) {
+	for index := 0; index < *WL.JobNum; index++ {
+		(*WL.JobMonitor)[index] <- "q"
+		(*WL.JobWorker)[index] <- "q"
+		jobName := "test" + strconv.Itoa(index)
+		Request.DeleteJob("default", jobName, Request.Caicloud)
+	}
 }
 func EndShortTermWorkLoad(quitWorkLoaders *[]chan string, quitMoinitors *[]chan string, boundNum int) {
 	for index := 0; index < boundNum; index++ {

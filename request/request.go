@@ -34,9 +34,9 @@ func InvokeRequest_Caicloud(method string, url string, body []byte) *http.Respon
 		req.Header.Set("Content-Type", "application/json")
 	}
 	resp, err := client.Do(req)
-	fmt.Println(resp.Header)
-	fmt.Println(resp.Status)
-	fmt.Println(resp.StatusCode)
+	//fmt.Println(resp.Header)
+	//fmt.Println(resp.Status)
+	//fmt.Println(resp.StatusCode)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -165,8 +165,37 @@ func GetJobOfNamespace(namespace string, mode string) {
 		}
 	}
 }
-func GetJobByNameAndNamespace(namespace string, name string, mode string) {
+func JobExist(namespace string, name string, mode string) bool {
 	var resp *http.Response
+	var v classType.Job
+	str := GenerateJobNameUrl(namespace, name)
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			return false
+		}
+		if (resp.Status == "404 Not Found") {
+			return false
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+
+		return true
+		//for _, item := range v.Items {
+		//	classType.PrintJob(item)
+		//}
+	}
+	return false
+}
+
+func GetJobByNameAndNamespace(namespace string, name string, mode string) classType.Job {
+	var resp *http.Response
+	var v classType.Job
 	str := GenerateJobNameUrl(namespace, name)
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + str)
@@ -178,14 +207,14 @@ func GetJobByNameAndNamespace(namespace string, name string, mode string) {
 		body, err := ioutil.ReadAll(resp.Body)
 		if (err != nil) {
 			fmt.Print(err)
-			return
+			return v
 		}
-		var v classType.JobList
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, item := range v.Items {
-			classType.PrintJob(item)
-		}
+		//for _, item := range v.Items {
+		//	classType.PrintJob(item)
+		//}
 	}
+	return v
 }
 func GetAllService(mode string) {
 	var resp *http.Response
@@ -346,7 +375,7 @@ func CreatePod(namespace string, image string, name string, cpu_min string, cpu_
 	//fmt.Print(url + "\n")
 
 }
-func CreateJob(namespace string, image string, name string, completion int32, parallelism int32, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {
+func CreateJob(namespace string, image string, name string, completion int32, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -354,7 +383,7 @@ func CreateJob(namespace string, image string, name string, completion int32, pa
 	resource.Requests = make(map[classType.ResourceName]string)
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
-	byte := GenerateJobBody(namespace, name, image, completion, parallelism, command, resource)
+	byte := GenerateJobBody(namespace, name, image, completion, command, resource, true)
 	var url string
 	if mode == Test {
 		url = destinationServer_Test + GenerateJobNamespaceUrl(namespace)
@@ -363,10 +392,20 @@ func CreateJob(namespace string, image string, name string, completion int32, pa
 		url = destinationServer_Caicloud + GenerateJobNamespaceUrl(namespace)
 		InvokeRequest_Caicloud("POST", url, byte)
 	}
+}
 
-	//fmt.Print(url + "\n")
-	//fmt.Println(string(byte))
-
+func CreateJobWithoutResource(namespace string, image string, name string, completion int32, command string, mode string) {
+	var resource classType.ResourceRequirements
+	byte := GenerateJobBody(namespace, name, image, completion, command, resource, false)
+	var url string
+	if mode == Test {
+		url = destinationServer_Test + GenerateJobNamespaceUrl(namespace)
+		PostUrl_test(url, byte)
+	} else {
+		url = destinationServer_Caicloud + GenerateJobNamespaceUrl(namespace)
+		fmt.Println(url)
+		InvokeRequest_Caicloud("POST", url, byte)
+	}
 }
 
 func CreateService(name string, label_name string, namespace string, port int32, mode string) {
@@ -450,7 +489,7 @@ func DeleteReplicationController(namespace string, name string, mode string) {
 	}
 
 }
-func GenerateJobBody(namespace string, name string, image string, completion int32, Parallelism int32, command string, resource classType.ResourceRequirements) []byte {
+func GenerateJobBody(namespace string, name string, image string, completion int32, command string, resource classType.ResourceRequirements, whetherResource bool) []byte {
 	var typeMeta classType.TypeMeta
 	typeMeta.APIVersion = "batch/v1"
 	typeMeta.Kind = "Job"
@@ -459,13 +498,15 @@ func GenerateJobBody(namespace string, name string, image string, completion int
 	objectMeta.Namespace = namespace
 
 	var jobSpec classType.JobSpec
-	jobSpec.Parallelism = &Parallelism
 	jobSpec.Completions = &completion
 	jobSpec.Template.Name = name
 	var container classType.Container
 	container.Name = name
 	container.Image = image
-	container.Resources = resource
+	if whetherResource == true {
+		container.Resources = resource
+	}
+
 	container.Command = strings.Split(command, " ")
 	var containers [1]classType.Container
 	containers[0] = container
@@ -605,6 +646,9 @@ func PodComplete(pod classType.Pod) bool {
 		return len(pod.Name) == 0 || (pod.Status.ContainerStatuses[0].Ready == false && pod.Status.Phase == "Running")
 	}
 	return len(pod.Name) == 0
+}
+func JobComplete(job classType.Job) bool {
+	return *job.Spec.Completions == job.Status.Succeeded
 }
 
 

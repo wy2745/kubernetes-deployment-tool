@@ -16,6 +16,7 @@ const (
 	mem_M string = "Mi"
 	short_general string = "docker.io/zilinglius/workload:short-general"
 	short_cpu_bound string = "docker.io/zilinglius/workload:short-cpu-bound"
+	shortTermWorkCompletion int32 = 1000
 )
 
 type WorkLoad struct {
@@ -34,6 +35,157 @@ type WorkloadController struct {
 func escapeMysqlQuery(path string) string {
 	str := strings.Replace(path, "./", "\"./", 1)
 	return str + "\""
+}
+
+func MissionRecorder() {
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print("^_^\n")
+		fmt.Print("请输入总负载信息\n")
+		fmt.Print("总负载Cpu(单位:m 整数):")
+		var TotalCpu, TotalMem int
+		var ShortCpuRate, ShortMemRate float64
+		var err error
+		var line string
+		scanner.Scan()
+		line = scanner.Text()
+
+		for TotalCpu, err = strconv.Atoi(line); err != nil; {
+			fmt.Print("必须输入整数\n")
+			scanner.Scan()
+			line = scanner.Text()
+			TotalCpu, err = strconv.Atoi(line)
+
+		}
+		fmt.Print("\n总负载Mem(单位:Mi 整数):")
+		scanner.Scan()
+		line = scanner.Text()
+		for TotalMem, err = strconv.Atoi(line); err != nil; err = nil {
+			fmt.Print("必须输入整数\n")
+			scanner.Scan()
+			line = scanner.Text()
+			TotalMem, err = strconv.Atoi(line)
+		}
+		fmt.Print("\n短时任务负载Cpu比例(小数):")
+		scanner.Scan()
+		line = scanner.Text()
+		for ShortCpuRate, err = strconv.ParseFloat(line, 32); err != nil || ShortCpuRate > 1; err = nil {
+			fmt.Print("必须输入小于等于1的小数\n")
+			scanner.Scan()
+			line = scanner.Text()
+			ShortCpuRate, err = strconv.ParseFloat(line, 32)
+		}
+		fmt.Print("\n短时任务负载Mem比例(小数):")
+		scanner.Scan()
+		line = scanner.Text()
+		for ShortMemRate, err = strconv.ParseFloat(line, 32); err != nil || ShortMemRate > 1; err = nil {
+			fmt.Print("必须输入小于等于1的小数\n")
+			scanner.Scan()
+			line = scanner.Text()
+			ShortMemRate, err = strconv.ParseFloat(line, 32)
+		}
+		var WL *WorkloadController
+		WL = NewWorkLoadController(TotalCpu, TotalMem, float32(ShortCpuRate), float32(ShortMemRate))
+		WorkLoadDisplay(WL)
+		//fmt.Println("部署长时任务")
+		//Request.CreatePod("default", short_general, "test1", WL.LongTerm.cpuWorkLoad, WL.LongTerm.cpuWorkLoad, WL.LongTerm.memWorkLoad, WL.LongTerm.memWorkLoad, "./home/ws 20000000", Request.Caicloud)
+		////为了测试，先删掉刚创建好的Pod
+		//Request.DeletePod("default", "test1", Request.Caicloud)
+		fmt.Println("部署短时任务")
+		//resultChan := make(chan string)
+
+
+		//每个cpu-bound占用10M内存，目前暂时用0.4个cpu
+		//目前暂时考虑负载mem = 10*n  cpu = 400*n n是同一个数
+		//TODO:根据负载，调整短期任务的内存和cpu占用，以保证能够通过整数数量的短期任务来满足负载
+		memUse := 10
+		cpuUse := 400
+
+		boundNum := WL.ShortTerm.cpuWorkLoad_int / cpuUse
+		fmt.Println("size: ", boundNum)
+
+		qw, qm := UploadShortTermMission(boundNum, cpuUse, cpuUse, memUse, memUse)
+		fmt.Print("输入任何字符以结束:\n")
+		scanner.Scan()
+		line = scanner.Text()
+		EndShortTermWorkLoad(qw, qm, boundNum)
+		//t1.Stop()
+		//Request.DeletePod("default", "test")
+
+	}
+}
+
+func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memMax int) (*[]chan string, *[]chan string) {
+	var jobNames []string
+	//建立channel组，分别监听
+	var resultChans [] chan string
+	var quitWorkLoaders []chan string
+	var quitMoinitors [] chan string
+	//生成并记录job组的名称
+	for index := 0; index < JobNum; index++ {
+		var ind int
+		var pon string
+		ind = index
+		jobName := "test" + strconv.Itoa(ind)
+		fmt.Println(jobName)
+		jobNames = append(jobNames, jobName)
+		resultChan := make(chan string)
+		resultChans = append(resultChans, resultChan)
+		quitWorkLoader := make(chan string)
+		quitWorkLoaders = append(quitWorkLoaders, quitWorkLoader)
+		quitMoinitor := make(chan string)
+		quitMoinitors = append(quitMoinitors, quitMoinitor)
+
+		go func() {
+			for {
+				select {
+				case pon = <-resultChan:
+					fmt.Println("正在删除旧pod: ", pon)
+					Request.DeleteJob("default", pon, Request.Caicloud)
+					fmt.Println("正在创建新pod: ", pon)
+				//Request.CreateJob("default", short_cpu_bound, pon, 1000, strconv.Itoa(cpuMin) + cpu, strconv.Itoa(cpuMax) + cpu, strconv.Itoa(memMin) + mem_M, strconv.Itoa(memMax) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
+					Request.CreateJobWithoutResource("default", short_cpu_bound, pon, shortTermWorkCompletion, "./home/wsc 100 1000", Request.Caicloud)
+				case <-quitWorkLoader:
+					fmt.Println("进程杀死", ind)
+					return
+				default:
+					continue
+				}
+			}
+		}()
+	}
+
+	//构建一个新的检查job组运行情况的go func，基本思想，建立多个线程，负责单一检查某个job的运行状态，另外建一个线程负责收听job的运行状态，重建job
+	for index, jobName := range jobNames {
+		var ind int
+		var jon string
+		jon = jobName
+		ind = index
+		go func() {
+			for {
+				select {
+				case <-quitMoinitors[ind]:
+					fmt.Println("进程杀死", ind)
+					return
+				default:
+					if !Request.JobExist("default", jon, Request.Caicloud) || Request.JobComplete(Request.GetJobByNameAndNamespace("default", jon, Request.Caicloud)) {
+						fmt.Print("不存在，需要创建\n\n\n")
+						resultChans[ind] <- jon
+						time.Sleep(time.Second * 3)
+					}
+				}
+			}
+		}()
+	}
+	return &quitWorkLoaders, &quitMoinitors
+}
+func EndShortTermWorkLoad(quitWorkLoaders *[]chan string, quitMoinitors *[]chan string, boundNum int) {
+	for index := 0; index < boundNum; index++ {
+		(*quitMoinitors)[index] <- "q"
+		(*quitWorkLoaders)[index] <- "q"
+		jobName := "test" + strconv.Itoa(index)
+		Request.DeleteJob("default", jobName, Request.Caicloud)
+	}
 }
 
 func MissionRecord() {
@@ -136,37 +288,9 @@ func MissionRecord() {
 					default:
 						continue
 					}
-					//podName := <-resultChan
-					//fmt.Println("正在删除旧pod: ", podName)
-					//Request.DeletePod("default", podName, Request.Caicloud)
-					//fmt.Println("正在创建新pod: ", podName)
-					//Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(cpuUse) + cpu, strconv.Itoa(cpuUse) + cpu, strconv.Itoa(memUse) + mem_M, strconv.Itoa(memUse) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
-
 				}
 			}()
 		}
-
-		//go func() {
-		//	for {
-		//
-		//		if Request.PodComplete(Request.GetPodByNameAndNamespace("default", "test")) {
-		//			fmt.Print("不存在，需要创建\n\n\n")
-		//			resultChan <- "1"
-		//			time.Sleep(time.Second * 3)
-		//		}
-		//
-		//	}
-		//}()
-		//go func() {
-		//	for {
-		//		<-resultChan
-		//		fmt.Println("正在删除旧pod")
-		//		Request.DeletePod("default", "test")
-		//		fmt.Println("正在创建新pod")
-		//		Request.CreatePod_test("default", short_cpu_bound, "test", WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.cpuWorkLoad, WL.ShortTerm.memWorkLoad, WL.ShortTerm.memWorkLoad, "./home/wsc 100 1000")
-		//
-		//	}
-		//}()
 
 		//构建一个新的检查pod组运行情况的go func，基本思想，建立多个线程，负责单一检查某个pod的运行状态，另外建一个线程负责收听pod的运行状态，重建pod
 		for index, podName := range podNames {
@@ -187,13 +311,6 @@ func MissionRecord() {
 							time.Sleep(time.Second * 3)
 						}
 					}
-
-					//if Request.PodComplete(Request.GetPodByNameAndNamespace("default", podName, Request.Caicloud)) {
-					//	fmt.Print("不存在，需要创建\n\n\n")
-					//	resultChans[index] <- podName
-					//	time.Sleep(time.Second * 3)
-					//}
-
 				}
 			}()
 		}

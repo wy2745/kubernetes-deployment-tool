@@ -16,9 +16,12 @@ const (
 	mem_M string = "Mi"
 	short_general string = "docker.io/zilinglius/workload:short-general"
 	short_cpu_bound string = "docker.io/zilinglius/workload:short-cpu-bound"
+	nginx_image string = "ymqytw/nginxhttps:1.5"
 	shortTermWorkCompletion int32 = 1000
 	cpu_Use = 400
 	mem_Use = 10
+	longTermName = "ntest"
+	longTermService = "nservice"
 )
 
 type WorkLoad struct {
@@ -41,10 +44,10 @@ type WorkloadController struct {
 }
 
 func Start() {
-	//var WL *WorkloadController
+	var WL *WorkloadController
 	var line string
 	scanner := bufio.NewScanner(os.Stdin)
-	var WL *WorkloadController
+	//var WL *WorkloadController
 	fmt.Println("^_^")
 	fmt.Println("1.查看jobs状态")
 	fmt.Println("2.设定WorkLoad参数并部署任务")
@@ -56,11 +59,13 @@ func Start() {
 		case "1":
 			fmt.Println("1")
 			GetJobStatus(WL)
+			GetLongTermStatus()
 		case "2":
 			WL = record(scanner)
 			fmt.Println("2")
 		case "3":
 			EndShortTermWorkLoadV2(WL)
+			EndLongTermMission(longTermName, longTermService, "default")
 			fmt.Println("3")
 		}
 		fmt.Println("^_^")
@@ -82,7 +87,7 @@ func GetJobStatus(WL *WorkloadController) {
 	}
 	for _, jobName := range WL.JobName {
 		job := Request.GetJobByNameAndNamespace("default", jobName, Request.Caicloud)
-		fmt.Println("----JobName: ", job.Name)
+		fmt.Println("JobName: ", job.Name)
 		fmt.Println("    actice: ", job.Status.Active)
 		fmt.Println("    succeeded: ", job.Status.Succeeded)
 		fmt.Println("    failed: ", job.Status.Failed)
@@ -91,8 +96,19 @@ func GetJobStatus(WL *WorkloadController) {
 		} else {
 			fmt.Println("Status: Not Finished.")
 		}
-		fmt.Println("----total: ", job.Spec.Completions, " finished: ", job.Status.Succeeded)
+		fmt.Println("total: ", job.Spec.Completions, " finished: ", job.Status.Succeeded)
 	}
+}
+
+func GetLongTermStatus() {
+	Pods := Request.GetPodsOfNamespace("default", Request.Caicloud)
+	namespace, name := Request.FindPodByLabelName(longTermName, &Pods)
+	pod := Request.GetPodByNameAndNamespace(namespace, name, Request.Caicloud)
+	fmt.Println("podName: ", pod.Name)
+	fmt.Println("status: ", pod.Status.Phase)
+	Service := Request.GetServicesOfNamespaceAndName("default", longTermService, Request.Caicloud)
+	fmt.Println("serviceName: ", Service.Name)
+	fmt.Println("status: ", Service.Status)
 }
 
 func record(scanner *bufio.Scanner, ) *WorkloadController {
@@ -150,6 +166,8 @@ func record(scanner *bufio.Scanner, ) *WorkloadController {
 	fmt.Println("size: ", boundNum)
 
 	UploadShortTermMissionV2(boundNum, WL)
+	UploadLongTermMission(WL.LongTerm.cpuWorkLoad_int, WL.LongTerm.cpuWorkLoad_int, WL.LongTerm.memWorkLoad_int, WL.LongTerm.memWorkLoad_int)
+	UploadLongTermService(longTermName, longTermService, 80, 30888)
 	return WL
 	//fmt.Print("输入任何字符以结束:\n")
 	//scanner.Scan()
@@ -301,6 +319,30 @@ func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
 	}
 	WL.JobMonitor = &quitMoinitors
 	WL.JobWorker = &quitWorkLoaders
+}
+
+func UploadLongTermService(labelName string, name string, port int32, nodeport int32) {
+	Request.CreateService(name, labelName, "default", port, nodeport, Request.Caicloud)
+	fmt.Println("Service ", name, " created!")
+}
+
+func UploadLongTermMission(cpuMin int, cpuMax int, memMin int, memMax int) {
+	var ports map[int32]int32
+	ports = make(map[int32]int32)
+	ports[int32(443)] = int32(8843)
+	ports[int32(80)] = int32(8088)
+	Request.CreateReplicationController("default", nginx_image, longTermName, longTermName, longTermName, int32(1), strconv.Itoa(cpuMin) + cpu, strconv.Itoa(cpuMax) + cpu, strconv.Itoa(memMin) + mem_M, strconv.Itoa(memMax) + mem_M, ports, Request.Caicloud)
+	fmt.Println("长期任务nginx创建...")
+}
+
+func EndLongTermMission(podName string, serviceName string, namespace string) {
+	Request.DeleteService(namespace, serviceName, Request.Caicloud)
+	Request.DeleteReplicationController(namespace, podName, Request.Caicloud)
+	pods := Request.GetPodsOfNamespace("default", Request.Caicloud)
+	names, name := Request.FindPodByLabelName(longTermName, &pods)
+	Request.DeletePod(names, name, Request.Caicloud)
+
+	fmt.Println("长期任务删除成功")
 }
 
 func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memMax int) (*[]chan string, *[]chan string) {

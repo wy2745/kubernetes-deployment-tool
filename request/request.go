@@ -216,7 +216,9 @@ func GetJobByNameAndNamespace(namespace string, name string, mode string) classT
 	}
 	return v
 }
-func GetAllService(mode string) {
+func GetAllService(mode string) []classType.Service {
+	var v classType.ServiceList
+	var serviceList []classType.Service
 	var resp *http.Response
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
@@ -229,14 +231,17 @@ func GetAllService(mode string) {
 		body, err := ioutil.ReadAll(resp.Body)
 		if (err != nil) {
 			fmt.Print(err)
-			return
+			return serviceList
 		}
-		var v classType.ServiceList
+
 		jsonParse.JsonUnmarsha(body, &v)
 		for _, item := range v.Items {
 			classType.PrintService(item)
 		}
+		serviceList = v.Items
+		return serviceList
 	}
+	return serviceList
 }
 func GetServicesOfNamespace(namespace string, mode string) {
 	var resp *http.Response
@@ -261,8 +266,32 @@ func GetServicesOfNamespace(namespace string, mode string) {
 		}
 	}
 }
+func GetServicesOfNamespaceAndName(namespace string, name string, mode string) classType.Service {
+	var v classType.Service
+	var resp *http.Response
+	str := GenerateServiceListNamespaceUrl(namespace)
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
 
-func GetPodsOfNamespace(namespace string, mode string) {
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return v
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		return v
+	}
+	return v
+}
+
+func GetPodsOfNamespace(namespace string, mode string) []classType.Pod {
+	var v classType.PodList
+	var pod []classType.Pod
 	var resp *http.Response
 	str := GeneratePodNamespaceUrl(namespace)
 	if mode == Test {
@@ -276,14 +305,16 @@ func GetPodsOfNamespace(namespace string, mode string) {
 		body, err := ioutil.ReadAll(resp.Body)
 		if (err != nil) {
 			fmt.Print(err)
-			return
+			return pod
 		}
-		var v classType.PodList
 		jsonParse.JsonUnmarsha(body, &v)
+		pod = v.Items
+		return pod
 		//for _, item := range v.Items {
 		//	classType.PrintPod(item)
 		//}
 	}
+	return pod
 }
 
 func GetPodByNameAndNamespace(namespace string, name string, mode string) classType.Pod {
@@ -407,8 +438,8 @@ func CreateJobWithoutResource(namespace string, image string, name string, compl
 	}
 }
 
-func CreateService(name string, label_name string, namespace string, port int32, mode string) {
-	byte := GenerateServiceBody(name, label_name, namespace, port)
+func CreateService(name string, label_name string, namespace string, port int32, nodeport int32, mode string) {
+	byte := GenerateServiceBody(name, label_name, namespace, port, nodeport)
 
 	var url string
 	if mode == Test {
@@ -421,7 +452,7 @@ func CreateService(name string, label_name string, namespace string, port int32,
 
 }
 
-func CreateReplicationController(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string, mode string) {
+func CreateReplicationController(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string, ports map[int32]int32, mode string) {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -429,7 +460,14 @@ func CreateReplicationController(namespace string, image string, name string, po
 	resource.Requests = make(map[classType.ResourceName]string)
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
-	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic, resource)
+	var Ports []classType.ContainerPort
+	for key, value := range ports {
+		var port classType.ContainerPort
+		port.ContainerPort = key
+		port.HostPort = value
+		Ports = append(Ports, port)
+	}
+	byte := GenerateReplicationcontrollerBody(namespace, image, name, podName, labelName, replic, resource, Ports)
 
 	var url string
 	if mode == Test {
@@ -558,7 +596,7 @@ func GeneratePodBody(namespace string, image string, name string, resource class
 
 }
 
-func GenerateServiceBody(name string, labelName string, namespace string, port int32) []byte {
+func GenerateServiceBody(name string, labelName string, namespace string, port int32, nodePort int32) []byte {
 	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
@@ -574,21 +612,23 @@ func GenerateServiceBody(name string, labelName string, namespace string, port i
 	//生成Service spec
 	var servicePort classType.ServicePort
 	servicePort.Port = port
+	servicePort.NodePort = nodePort
 	slice := []classType.ServicePort{servicePort}
 	var serviceSpec classType.ServiceSpec
 	serviceSpec.Selector = make(map[string]string)
 	serviceSpec.Selector["name"] = labelName
 	serviceSpec.Ports = slice
+	serviceSpec.Type = classType.ServiceTypeNodePort
 	var service classType.Service
 	service.ObjectMeta = objectMedata
 	service.TypeMeta = typeMedata
 	service.Spec = serviceSpec
 	b := jsonParse.JsonMarsha(service)
-	//fmt.Print(string(b))
+	fmt.Print(string(b))
 	return b
 }
 
-func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32, resource classType.ResourceRequirements) []byte {
+func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32, resource classType.ResourceRequirements, ports []classType.ContainerPort) []byte {
 	//生成typeMedata
 	var typeMedata classType.TypeMeta
 	typeMedata.APIVersion = "v1"
@@ -612,6 +652,7 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	container.Name = name
 	container.Image = image
 	container.Resources = resource
+	container.Ports = ports
 	var containers [1]classType.Container
 	containers[0] = container
 	slice := []classType.Container{container}
@@ -649,6 +690,16 @@ func PodComplete(pod classType.Pod) bool {
 func JobComplete(job classType.Job) bool {
 	return *job.Spec.Completions == job.Status.Succeeded
 }
+
+func FindPodByLabelName(name string, pods *[]classType.Pod) (string, string) {
+	for _, pod := range *pods {
+		if pod.Labels["name"] == name {
+			return pod.Namespace, pod.Name
+		}
+	}
+	return " ", " "
+}
+
 
 
 

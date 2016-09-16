@@ -49,6 +49,9 @@ func GenerateJobNameUrl(namespace string, name string) string {
 func GenerateServiceListNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/services"
 }
+func GenerateServiceListNameUrl(namespace string, name string) string {
+	return GetNamespaces_GET + "/" + namespace + "/services" + "/" + name
+}
 func GenerateReplicationControllerNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers"
 }

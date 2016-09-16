@@ -44,23 +44,29 @@ func Start() {
 	//var WL *WorkloadController
 	var line string
 	scanner := bufio.NewScanner(os.Stdin)
+	var WL *WorkloadController
+	fmt.Println("^_^")
+	fmt.Println("1.查看jobs状态")
+	fmt.Println("2.设定WorkLoad参数并部署任务")
+	fmt.Println("3.停止所有任务")
 	for {
-		var WL *WorkloadController
 		scanner.Scan()
-		fmt.Println("^_^")
-		fmt.Println("1.查看jobs状态")
-		fmt.Println("2.设定WorkLoad参数并部署任务")
-		fmt.Println("3.停止所有任务")
 		line = scanner.Text()
 		switch line {
 		case "1":
 			fmt.Println("1")
 			GetJobStatus(WL)
 		case "2":
+			WL = record(scanner)
 			fmt.Println("2")
 		case "3":
+			EndShortTermWorkLoadV2(WL)
 			fmt.Println("3")
 		}
+		fmt.Println("^_^")
+		fmt.Println("1.查看jobs状态")
+		fmt.Println("2.设定WorkLoad参数并部署任务")
+		fmt.Println("3.停止所有任务")
 	}
 }
 
@@ -70,17 +76,17 @@ func escapeMysqlQuery(path string) string {
 }
 
 func GetJobStatus(WL *WorkloadController) {
-	if WL == nil || len(*WL.JobName == 0) {
+	if WL == nil || len(WL.JobName) == 0 {
 		fmt.Println("目前没有在运行的任务")
 		return
 	}
-	for _, jobName := range *WL.JobName {
+	for _, jobName := range WL.JobName {
 		job := Request.GetJobByNameAndNamespace("default", jobName, Request.Caicloud)
 		fmt.Println("----JobName: ", job.Name)
 		fmt.Println("    actice: ", job.Status.Active)
 		fmt.Println("    succeeded: ", job.Status.Succeeded)
 		fmt.Println("    failed: ", job.Status.Failed)
-		if job.Spec.Completions == job.Status.Succeeded {
+		if *job.Spec.Completions == job.Status.Succeeded {
 			fmt.Println("Status: Finished.")
 		} else {
 			fmt.Println("Status: Not Finished.")
@@ -89,7 +95,7 @@ func GetJobStatus(WL *WorkloadController) {
 	}
 }
 
-func record(scanner *bufio.Scanner, WL *WorkloadController) {
+func record(scanner *bufio.Scanner, ) *WorkloadController {
 	fmt.Print("^_^\n")
 	fmt.Print("请输入总负载信息\n")
 	fmt.Print("总负载Cpu(单位:m 整数):")
@@ -97,6 +103,7 @@ func record(scanner *bufio.Scanner, WL *WorkloadController) {
 	var ShortCpuRate, ShortMemRate float64
 	var err error
 	var line string
+	var WL *WorkloadController
 	scanner.Scan()
 	line = scanner.Text()
 
@@ -143,10 +150,11 @@ func record(scanner *bufio.Scanner, WL *WorkloadController) {
 	fmt.Println("size: ", boundNum)
 
 	UploadShortTermMissionV2(boundNum, WL)
-	fmt.Print("输入任何字符以结束:\n")
-	scanner.Scan()
-	line = scanner.Text()
-	EndShortTermWorkLoadV2(WL)
+	return WL
+	//fmt.Print("输入任何字符以结束:\n")
+	//scanner.Scan()
+	//line = scanner.Text()
+	//EndShortTermWorkLoadV2(WL)
 }
 
 func MissionRecorder() {
@@ -227,12 +235,12 @@ func MissionRecorder() {
 	}
 }
 func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
-	*WL.JobNum = JobNum
+	WL.JobNum = JobNum
 	var jobNames []string
 	//建立channel组，分别监听
 	var resultChans [] chan string
-	var quitWorkLoaders []chan string
-	var quitMoinitors [] chan string
+	var quitWorkLoaders channel
+	var quitMoinitors channel
 	//生成并记录job组的名称
 	for index := 0; index < JobNum; index++ {
 		var ind int
@@ -266,7 +274,8 @@ func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
 			}
 		}()
 	}
-	*WL.JobName = jobNames
+	WL.JobName = jobNames
+	fmt.Println("haha:             ", WL.JobName)
 
 	//构建一个新的检查job组运行情况的go func，基本思想，建立多个线程，负责单一检查某个job的运行状态，另外建一个线程负责收听job的运行状态，重建job
 	for index, jobName := range jobNames {
@@ -290,8 +299,8 @@ func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
 			}
 		}()
 	}
-	*WL.JobMonitor = quitMoinitors
-	*WL.JobWorker = quitWorkLoaders
+	WL.JobMonitor = &quitMoinitors
+	WL.JobWorker = &quitWorkLoaders
 }
 
 func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memMax int) (*[]chan string, *[]chan string) {
@@ -360,7 +369,7 @@ func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memM
 }
 
 func EndShortTermWorkLoadV2(WL *WorkloadController) {
-	for index := 0; index < *WL.JobNum; index++ {
+	for index := 0; index < WL.JobNum; index++ {
 		(*WL.JobMonitor)[index] <- "q"
 		(*WL.JobWorker)[index] <- "q"
 		jobName := "test" + strconv.Itoa(index)

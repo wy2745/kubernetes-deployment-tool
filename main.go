@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	//"./ab"
 	WorkLoadController "./workload"
 )
 
@@ -22,6 +23,7 @@ func main() {
 	//Request.CreateJob("default", "docker.io/zilinglius/workload:short-general", "wsg", int32(5), "400m", "500m", "10Mi", "20Mi", "./home/wsg 200000000", Request.Caicloud)
 	//Request.GetJobOfNamespace("default", Request.Caicloud)
 	//Request.DeleteJob("default", "wsg", Request.Caicloud)
+	//ab.Abtest()
 	fmt.Println("tick tick stop")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

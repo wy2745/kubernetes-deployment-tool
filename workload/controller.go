@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	Request "../request"
+	"../ab"
 	"time"
 )
 
@@ -51,7 +52,8 @@ func Start() {
 	fmt.Println("^_^")
 	fmt.Println("1.查看jobs状态")
 	fmt.Println("2.设定WorkLoad参数并部署任务")
-	fmt.Println("3.停止所有任务")
+	fmt.Println("3.跑测试并记录测试结果到文件")
+	fmt.Println("4.停止所有任务")
 	for {
 		scanner.Scan()
 		line = scanner.Text()
@@ -61,18 +63,27 @@ func Start() {
 			GetJobStatus(WL)
 			GetLongTermStatus()
 		case "2":
+			if WL != nil {
+				WL = EndMission(longTermName, longTermService, "default", WL)
+			}
 			WL = record(scanner)
 		//UploadLongTermService(longTermName, longTermService, 80, 30888)
 		//fmt.Println("2")
 		case "3":
-			EndShortTermWorkLoadV2(WL)
-			EndLongTermMission(longTermName, longTermService, "default")
+			if WL != nil {
+				fmt.Println("准备测试...")
+				ab.Abtest()
+				fmt.Println("测试完成，文件储存完成")
+			}
+		case "4":
+			WL = EndMission(longTermName, longTermService, "default", WL)
 		//fmt.Println("3")
 		}
 		fmt.Println("^_^")
 		fmt.Println("1.查看jobs状态")
 		fmt.Println("2.设定WorkLoad参数并部署任务")
-		fmt.Println("3.停止所有任务")
+		fmt.Println("3.跑测试并记录测试结果到文件")
+		fmt.Println("4.停止所有任务")
 	}
 }
 
@@ -338,6 +349,12 @@ func UploadLongTermMission(cpuMin int, cpuMax int, memMin int, memMax int) {
 	ports[int32(80)] = int32(8088)
 	Request.CreateReplicationController("default", nginx_image, longTermName, longTermName, longTermName, int32(1), strconv.Itoa(cpuMin) + cpu, strconv.Itoa(cpuMax) + cpu, strconv.Itoa(memMin) + mem_M, strconv.Itoa(memMax) + mem_M, ports, Request.Caicloud)
 	fmt.Println("长期任务nginx创建...")
+}
+
+func EndMission(podName string, serviceName string, namespace string, WL *WorkloadController) *WorkloadController {
+	EndShortTermWorkLoadV2(WL)
+	EndLongTermMission(longTermName, longTermService, "default")
+	return nil
 }
 
 func EndLongTermMission(podName string, serviceName string, namespace string) {

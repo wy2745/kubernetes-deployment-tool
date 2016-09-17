@@ -269,7 +269,7 @@ func GetServicesOfNamespace(namespace string, mode string) {
 func GetServicesOfNamespaceAndName(namespace string, name string, mode string) classType.Service {
 	var v classType.Service
 	var resp *http.Response
-	str := GenerateServiceListNamespaceUrl(namespace)
+	str := GenerateServiceListNameUrl(namespace, name)
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + str)
 	} else {
@@ -624,7 +624,7 @@ func GenerateServiceBody(name string, labelName string, namespace string, port i
 	service.TypeMeta = typeMedata
 	service.Spec = serviceSpec
 	b := jsonParse.JsonMarsha(service)
-	fmt.Print(string(b))
+	//fmt.Print(string(b))
 	return b
 }
 

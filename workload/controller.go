@@ -57,16 +57,17 @@ func Start() {
 		line = scanner.Text()
 		switch line {
 		case "1":
-			fmt.Println("1")
+			//fmt.Println("1")
 			GetJobStatus(WL)
 			GetLongTermStatus()
 		case "2":
 			WL = record(scanner)
-			fmt.Println("2")
+		//UploadLongTermService(longTermName, longTermService, 80, 30888)
+		//fmt.Println("2")
 		case "3":
 			EndShortTermWorkLoadV2(WL)
 			EndLongTermMission(longTermName, longTermService, "default")
-			fmt.Println("3")
+		//fmt.Println("3")
 		}
 		fmt.Println("^_^")
 		fmt.Println("1.查看jobs状态")
@@ -90,6 +91,7 @@ func GetJobStatus(WL *WorkloadController) {
 		fmt.Println("JobName: ", job.Name)
 		fmt.Println("    actice: ", job.Status.Active)
 		fmt.Println("    succeeded: ", job.Status.Succeeded)
+		fmt.Println("    goal: ", *job.Spec.Completions)
 		fmt.Println("    failed: ", job.Status.Failed)
 		if *job.Spec.Completions == job.Status.Succeeded {
 			fmt.Println("Status: Finished.")
@@ -108,6 +110,9 @@ func GetLongTermStatus() {
 	fmt.Println("status: ", pod.Status.Phase)
 	Service := Request.GetServicesOfNamespaceAndName("default", longTermService, Request.Caicloud)
 	fmt.Println("serviceName: ", Service.Name)
+	for _, port := range Service.Spec.Ports {
+		fmt.Println("expose port:", port.NodePort, "(container port:", port.Port, ") in each node")
+	}
 	fmt.Println("status: ", Service.Status)
 }
 

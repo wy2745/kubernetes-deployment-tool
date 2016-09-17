@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	//"./ab"
-	WorkLoadController "./workload"
+	//WorkLoadController "./workload"
+	"./locust"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 	//Request.DeletePod("default", "test0", Request.Caicloud)
 	//Request.GenerateServiceBody("mysql-service", "mysql----test", "default", 3302)
 	//WorkLoadController.MissionRecorder()
-	WorkLoadController.Start()
+	//WorkLoadController.Start()
 	//Request.GetAllService_Test("default")
 	//Request.GetAllService("default", Request.Caicloud)
 	//Request.GetJobOfNamespace("default", Request.Caicloud)
@@ -24,6 +25,7 @@ func main() {
 	//Request.GetJobOfNamespace("default", Request.Caicloud)
 	//Request.DeleteJob("default", "wsg", Request.Caicloud)
 	//ab.Abtest()
+	locust.LocustStart()
 	fmt.Println("tick tick stop")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	Request "../request"
+	Locust "../locust"
 	"../ab"
 	"time"
 )
@@ -52,8 +53,10 @@ func Start() {
 	fmt.Println("^_^")
 	fmt.Println("1.查看jobs状态")
 	fmt.Println("2.设定WorkLoad参数并部署任务")
-	fmt.Println("3.跑测试并记录测试结果到文件")
-	fmt.Println("4.停止所有任务")
+	fmt.Println("3.跑ab测试并记录测试结果到文件")
+	fmt.Println("4.Locust")
+	fmt.Println("5.停止所有任务")
+	fmt.Println("6.退出")
 	for {
 		scanner.Scan()
 		line = scanner.Text()
@@ -76,14 +79,23 @@ func Start() {
 				fmt.Println("测试完成，文件储存完成")
 			}
 		case "4":
+			Locust.Locust(scanner)
+		case "5":
 			WL = EndMission(longTermName, longTermService, "default", WL)
+		case "6":
+			if WL != nil {
+				WL = EndMission(longTermName, longTermService, "default", WL)
+			}
+			return
 		//fmt.Println("3")
 		}
-		fmt.Println("^_^")
 		fmt.Println("1.查看jobs状态")
 		fmt.Println("2.设定WorkLoad参数并部署任务")
-		fmt.Println("3.跑测试并记录测试结果到文件")
-		fmt.Println("4.停止所有任务")
+		fmt.Println("3.跑ab测试并记录测试结果到文件")
+		fmt.Println("4.Locust")
+		fmt.Println("5.停止所有任务")
+		fmt.Println("6.退出")
+
 	}
 }
 

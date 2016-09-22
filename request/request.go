@@ -3,7 +3,7 @@ package request
 import (
 	"net/http"
 	jsonParse "../json"
-	classType "../type"
+	classType "../type124"
 	"io/ioutil"
 	"fmt"
 	"bytes"
@@ -342,7 +342,33 @@ func GetPodByNameAndNamespace(namespace string, name string, mode string) classT
 	return v
 }
 
-func PostUrl_test(url string, byte []byte) {
+func GetNodeByName(name string, mode string) (classType.Node, string) {
+	var v classType.Node
+	var str2 string
+	str := GenerateNodeNameUrl(name)
+
+	var resp *http.Response
+	if mode == Test {
+		resp = InvokeGetReuqest(destinationServer_Test + str)
+	} else {
+		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
+	}
+
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return v, str2
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		str2 = classType.PrintNodeResourceStatus(v)
+		return v, str2
+	}
+	return v, str2
+}
+
+func PostUrl_test(url string, byte []byte) *http.Response {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(byte))
 	if err != nil {
 		panic(err)
@@ -354,7 +380,8 @@ func PostUrl_test(url string, byte []byte) {
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	return resp
+	//defer resp.Body.Close()
 
 	//fmt.Println("response Status:", resp.Status)
 	//fmt.Println("response Headers:", resp.Header)
@@ -385,7 +412,7 @@ func DeleteUrl_test(url string, byte []byte) {
 	ioutil.ReadAll(resp.Body)
 }
 
-func CreatePod(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {
+func CreatePod(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) classType.Pod {
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
@@ -394,16 +421,27 @@ func CreatePod(namespace string, image string, name string, cpu_min string, cpu_
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
 	byte := GeneratePodBody(namespace, image, name, resource, command)
+	var resp *http.Response
+	var v classType.Pod
 	var url string
 	if mode == Test {
 		url = destinationServer_Test + GeneratePodNamespaceUrl(namespace)
-		PostUrl_test(url, byte)
+		resp = PostUrl_test(url, byte)
 	} else {
 		url = destinationServer_Caicloud + GeneratePodNamespaceUrl(namespace)
-		InvokeRequest_Caicloud("POST", url, byte)
+		resp = InvokeRequest_Caicloud("POST", url, byte)
 	}
-
-	//fmt.Print(url + "\n")
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+			return v
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		return v
+	}
+	return v
 
 }
 func CreateJob(namespace string, image string, name string, completion int32, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {

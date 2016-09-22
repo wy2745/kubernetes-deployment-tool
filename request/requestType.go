@@ -55,4 +55,7 @@ func GenerateServiceListNameUrl(namespace string, name string) string {
 func GenerateReplicationControllerNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers"
 }
+func GenerateNodeNameUrl(name string) string {
+	return CreateNode_POST + "/" + name
+}
 

@@ -1,4 +1,4 @@
-package classType
+package type137
 
 import (
 	"gopkg.in/inf.v0"
@@ -220,7 +220,7 @@ type VolumeSource struct {
 
 	GitRepo               *GitRepoVolumeSource `json:"gitRepo,omitempty"`
 
-	Secret                *SecretVolumeSource `json:"secret,omitempty"`
+	Secret                SecretVolumeSource `json:"secret,omitempty"`
 
 	NFS                   *NFSVolumeSource `json:"nfs,omitempty"`
 
@@ -721,29 +721,52 @@ type ContainerStatus struct {
 
 type PodPhase string
 
+// These are the valid statuses of pods.
 const (
+	// PodPending means the pod has been accepted by the system, but one or more of the containers
+	// has not been started. This includes time before being bound to a node, as well as time spent
+	// pulling images onto the host.
 	PodPending PodPhase = "Pending"
+	// PodRunning means the pod has been bound to a node and all of the containers have been started.
+	// At least one container is still running or is in the process of being restarted.
 	PodRunning PodPhase = "Running"
+	// PodSucceeded means that all containers in the pod have voluntarily terminated
+	// with a container exit code of 0, and the system is not going to restart any of these containers.
 	PodSucceeded PodPhase = "Succeeded"
+	// PodFailed means that all containers in the pod have terminated, and at least one container has
+	// terminated in a failure (exited with a non-zero exit code or was stopped by the system).
 	PodFailed PodPhase = "Failed"
+	// PodUnknown means that for some reason the state of the pod could not be obtained, typically due
+	// to an error in communicating with the host of the pod.
 	PodUnknown PodPhase = "Unknown"
 )
 
 type PodConditionType string
 
+// These are valid conditions of pod.
 const (
+	// PodScheduled represents status of the scheduling process for this pod.
+	PodScheduled PodConditionType = "PodScheduled"
+	// PodReady means the pod is able to service requests and should be added to the
+	// load balancing pools of all matching services.
 	PodReady PodConditionType = "Ready"
+	// PodInitialized means that all init containers in the pod have started successfully.
+	PodInitialized PodConditionType = "Initialized"
 )
 
 type PodCondition struct {
 	Type               PodConditionType `json:"type"`
-	Status             ConditionStatus `json:"status"`
+	Status             ConditionStatus  `json:"status"`
 	LastProbeTime      Time `json:"lastProbeTime,omitempty"`
-	LastTransitionTime string `json:"lastTransitionTime,omitempty"`
-	Reason             string `json:"reason,omitempty"`
-	Message            string `json:"message,omitempty"`
+	LastTransitionTime Time `json:"lastTransitionTime,omitempty"`
+	Reason             string           `json:"reason,omitempty"`
+	Message            string           `json:"message,omitempty"`
 }
 
+// RestartPolicy describes how the container should be restarted.
+// Only one of the following restart policies may be specified.
+// If none of the following policies is specified, the default one
+// is RestartPolicyAlways.
 type RestartPolicy string
 
 const (
@@ -751,6 +774,14 @@ const (
 	RestartPolicyOnFailure RestartPolicy = "OnFailure"
 	RestartPolicyNever RestartPolicy = "Never"
 )
+
+// PodList is a list of Pods.
+type PodList struct {
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+
+	Items []Pod `json:"items"`
+}
 
 type DNSPolicy string
 
@@ -802,86 +833,308 @@ type PreferredSchedulingTerm struct {
 }
 
 type PodSpec struct {
-	Volumes                       []Volume `json:"volumes,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
-	Containers                    []Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name"`
+	Volumes                       []Volume `json:"volumes"`
+	// List of initialization containers belonging to the pod.
+	InitContainers                []Container `json:"-"`
+	// List of containers belonging to the pod.
+	Containers                    []Container   `json:"containers"`
 	RestartPolicy                 RestartPolicy `json:"restartPolicy,omitempty"`
+	// Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request.
+	// Value must be non-negative integer. The value zero indicates delete immediately.
+	// If this value is nil, the default grace period will be used instead.
+	// The grace period is the duration in seconds after the processes running in the pod are sent
+	// a termination signal and the time when the processes are forcibly halted with a kill signal.
+	// Set this value longer than the expected cleanup time for your process.
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
+	// Optional duration in seconds relative to the StartTime that the pod may be active on a node
+	// before the system actively tries to terminate the pod; value must be positive integer
 	ActiveDeadlineSeconds         *int64 `json:"activeDeadlineSeconds,omitempty"`
+	// Required: Set DNS policy.
 	DNSPolicy                     DNSPolicy `json:"dnsPolicy,omitempty"`
+	// NodeSelector is a selector which must be true for the pod to fit on a node
 	NodeSelector                  map[string]string `json:"nodeSelector,omitempty"`
-	ServiceAccountName            string `json:"serviceAccountName,omitempty"`
-	DeprecatedServiceAccount      string `json:"serviceAccount,omitempty"`
+
+	// ServiceAccountName is the name of the ServiceAccount to use to run this pod
+	// The pod will be allowed to use secrets referenced by the ServiceAccount
+	ServiceAccountName            string `json:"serviceAccountName"`
+
+	// NodeName is a request to schedule this pod onto a specific node.  If it is non-empty,
+	// the scheduler simply schedules this pod onto that node, assuming that it fits resource
+	// requirements.
 	NodeName                      string `json:"nodeName,omitempty"`
-	HostNetwork                   bool `json:"hostNetwork,omitempty"`
-	HostPID                       bool `json:"hostPID,omitempty"`
-	HostIPC                       bool `json:"hostIPC,omitempty"`
+	// SecurityContext holds pod-level security attributes and common container settings.
+	// Optional: Defaults to empty.  See type description for default values of each field.
 	SecurityContext               *PodSecurityContext `json:"securityContext,omitempty"`
-	ImagePullSecrets              []LocalObjectReference `json:"imagePullSecrets,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
+	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
+	// If specified, these secrets will be passed to individual puller implementations for them to use.  For example,
+	// in the case of docker, only DockerConfig type secrets are honored.
+	ImagePullSecrets              []LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	// Specifies the hostname of the Pod.
+	// If not specified, the pod's hostname will be set to a system-defined value.
+	Hostname                      string `json:"hostname,omitempty"`
+	// If specified, the fully qualified Pod hostname will be "<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>".
+	// If not specified, the pod will not have a domainname at all.
+	Subdomain                     string `json:"subdomain,omitempty"`
 }
 
+// Sysctl defines a kernel parameter to be set
+type Sysctl struct {
+	// Name of a property to set
+	Name  string `json:"name"`
+	// Value of a property to set
+	Value string `json:"value"`
+}
+
+func PrintResourceList(resource ResourceList) string {
+	var str string = ""
+	for key, value := range resource {
+		str += "资源名:" + string(key) + ",剩余量: " + value + "\n"
+		//fmt.Println("资源名:", key, ",剩余量: ", value)
+	}
+	return str
+}
+func PrintNodeResourceStatus(node Node) string {
+	//fmt.Println("nodeName: ", node.Name)
+	//fmt.Println("总资源: ")
+	//PrintResourceList(node.Status.Capacity)
+	//fmt.Println("剩余可用资源: ")
+	//PrintResourceList(node.Status.Allocatable)
+	return "nodeName: " + node.Name + "\n" + "总资源: \n" + PrintResourceList(node.Status.Capacity) + "\n" + "剩余可用资源: \n" + PrintResourceList(node.Status.Allocatable)
+}
+
+func PrintJob(job Job) {
+	fmt.Println("Job Message:")
+	fmt.Println("Job Object: ", job.ObjectMeta)
+	fmt.Println("Job TypeMeta:", job.TypeMeta)
+	fmt.Println("Job Spec:", job.Spec)
+	fmt.Println("Job Status", job.Status)
+}
+
+func PrintReplicationController(replicationcontroller ReplicationController) {
+	fmt.Print("Replicationcontroller Message:\n")
+	fmt.Print("ReplicationcontrollerName: " + replicationcontroller.Name + "\n")
+	fmt.Print("Namespace: " + replicationcontroller.Namespace + "\n")
+	fmt.Print("Kind: " + replicationcontroller.TypeMeta.APIVersion + "\n")
+	fmt.Print("APIVersion: " + replicationcontroller.TypeMeta.Kind + "\n")
+	fmt.Print("CreationTimestamp: " + replicationcontroller.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(replicationcontroller.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(replicationcontroller.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(replicationcontroller.Status)
+	fmt.Print("\n")
+}
+
+func PrintService(service Service) {
+	fmt.Print("Service Message:\n")
+	fmt.Print("ServiceName: " + service.Name + "\n")
+	fmt.Print("Namespace: " + service.Namespace + "\n")
+	fmt.Print("Kind: " + service.TypeMeta.APIVersion + "\n")
+	fmt.Print("APIVersion: " + service.TypeMeta.Kind + "\n")
+	fmt.Print("CreationTimestamp: " + service.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(service.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(service.Spec)
+	fmt.Print("\n")
+	fmt.Print("tatus: ")
+	fmt.Print(service.Status)
+	fmt.Print("\n")
+}
+
+func PrintNode(node Node) {
+	fmt.Print("Node Message:\n")
+	fmt.Print("NodeName: " + node.Name + "\n")
+	fmt.Print("Namespace: " + node.Namespace + "\n")
+	fmt.Print("Kind: " + node.TypeMeta.APIVersion + "\n")
+	fmt.Print("APIVersion: " + node.TypeMeta.Kind + "\n")
+	fmt.Print("CreationTimestamp: " + node.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(node.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(node.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(node.Status)
+	fmt.Print("\n")
+}
+func PrintNamespace(namespace Namespace) {
+	fmt.Print("Namespace Message:\n")
+	fmt.Print("Name: " + namespace.Name + "\n")
+	fmt.Print("CreationTimestamp: " + namespace.CreationTimestamp + "\n")
+	fmt.Print("Labels: ")
+	fmt.Print(namespace.Labels)
+	fmt.Print("\n")
+	fmt.Print("Spec: ")
+	fmt.Print(namespace.Spec)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(namespace.Status)
+	fmt.Print("\n")
+	fmt.Print("ObjectMeta: ")
+	fmt.Print(namespace.ObjectMeta)
+	fmt.Print("\n")
+}
+func PrintPod(pod Pod) {
+	fmt.Print("Pod Message:\n")
+	fmt.Print("Name: " + pod.Name + "\n")
+	fmt.Print("CreationTimestamp: " + pod.CreationTimestamp + "\n")
+	fmt.Print("spec: ")
+	fmt.Print(pod.Spec)
+	fmt.Print("\n")
+	fmt.Print("ObjectMeta: ")
+	fmt.Print(pod.ObjectMeta)
+	fmt.Print("\n")
+	fmt.Print("Status: ")
+	fmt.Print(pod.Status)
+	fmt.Print("\n")
+	fmt.Print("Labels: ")
+	fmt.Print(pod.Labels)
+	fmt.Print("\n")
+}
+
+// PodSecurityContext holds pod-level security attributes and common container settings.
+// Some fields are also present in container.securityContext.  Field values of
+// container.securityContext take precedence over field values of PodSecurityContext.
 type PodSecurityContext struct {
+	// Use the host's network namespace.  If this option is set, the ports that will be
+	// used must be specified.
+	// Optional: Default to false
+	// +k8s:conversion-gen=false
+	HostNetwork        bool `json:"hostNetwork,omitempty"`
+	// Use the host's pid namespace.
+	// Optional: Default to false.
+	// +k8s:conversion-gen=false
+	HostPID            bool `json:"hostPID,omitempty"`
+	// Use the host's ipc namespace.
+	// Optional: Default to false.
+	// +k8s:conversion-gen=false
+	HostIPC            bool `json:"hostIPC,omitempty"`
+	// The SELinux context to be applied to all containers.
+	// If unspecified, the container runtime will allocate a random SELinux context for each
+	// container.  May also be set in SecurityContext.  If set in
+	// both SecurityContext and PodSecurityContext, the value specified in SecurityContext
+	// takes precedence for that container.
 	SELinuxOptions     *SELinuxOptions `json:"seLinuxOptions,omitempty"`
+	// The UID to run the entrypoint of the container process.
+	// Defaults to user specified in image metadata if unspecified.
+	// May also be set in SecurityContext.  If set in both SecurityContext and
+	// PodSecurityContext, the value specified in SecurityContext takes precedence
+	// for that container.
 	RunAsUser          *int64 `json:"runAsUser,omitempty"`
+	// Indicates that the container must run as a non-root user.
+	// If true, the Kubelet will validate the image at runtime to ensure that it
+	// does not run as UID 0 (root) and fail to start the container if it does.
+	// If unset or false, no such validation will be performed.
+	// May also be set in SecurityContext.  If set in both SecurityContext and
+	// PodSecurityContext, the value specified in SecurityContext takes precedence.
 	RunAsNonRoot       *bool `json:"runAsNonRoot,omitempty"`
+	// A list of groups applied to the first process run in each container, in addition
+	// to the container's primary GID.  If unspecified, no groups will be added to
+	// any container.
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty"`
+	// A special supplemental group that applies to all containers in a pod.
+	// Some volume types allow the Kubelet to change the ownership of that volume
+	// to be owned by the pod:
+	//
+	// 1. The owning GID will be the FSGroup
+	// 2. The setgid bit is set (new files created in the volume will be owned by FSGroup)
+	// 3. The permission bits are OR'd with rw-rw----
+	//
+	// If unset, the Kubelet will not modify the ownership and permissions of any volume.
 	FSGroup            *int64 `json:"fsGroup,omitempty"`
 }
 
+// PodStatus represents information about the status of a pod. Status may trail the actual
+// state of a system.
 type PodStatus struct {
-	Phase             PodPhase `json:"phase,omitempty"`
-	Conditions        []PodCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
-	Message           string `json:"message,omitempty"`
-	Reason            string `json:"reason,omitempty"`
+	Phase                 PodPhase       `json:"phase,omitempty"`
+	Conditions            []PodCondition `json:"conditions,omitempty"`
+	// A human readable message indicating details about why the pod is in this state.
+	Message               string `json:"message,omitempty"`
+	// A brief CamelCase message indicating details about why the pod is in this state. e.g. 'OutOfDisk'
+	Reason                string `json:"reason,omitempty"`
 
-	HostIP            string `json:"hostIP,omitempty"`
-	PodIP             string `json:"podIP,omitempty"`
+	HostIP                string `json:"hostIP,omitempty"`
+	PodIP                 string `json:"podIP,omitempty"`
 
-	StartTime         *string `json:"startTime,omitempty"`
-	ContainerStatuses []ContainerStatus `json:"containerStatuses,omitempty"`
+	// Date and time at which the object was acknowledged by the Kubelet.
+	// This is before the Kubelet pulled the container image(s) for the pod.
+	StartTime             *Time `json:"startTime,omitempty"`
+
+	// The list has one entry per init container in the manifest. The most recent successful
+	// init container will have ready = true, the most recently started container will have
+	// startTime set.
+	// More info: http://releases.k8s.io/HEAD/docs/user-guide/pod-states.md#container-statuses
+	InitContainerStatuses []ContainerStatus `json:"-"`
+	// The list has one entry per container in the manifest. Each entry is
+	// currently the output of `docker inspect`. This output format is *not*
+	// final and should not be relied upon.
+	// TODO: Make real decisions about what our info should look like. Re-enable fuzz test
+	// when we have done this.
+	ContainerStatuses     []ContainerStatus `json:"containerStatuses,omitempty"`
 }
 
+// PodStatusResult is a wrapper for PodStatus returned by kubelet that can be encode/decoded
 type PodStatusResult struct {
 	TypeMeta `json:",inline"`
-	ObjectMeta `json:"metadata,omitempty"`
+	ObjectMeta           `json:"metadata,omitempty"`
+	// Status represents the current information about a pod. This data may not be up
+	// to date.
 	Status PodStatus `json:"status,omitempty"`
 }
 
+// +genclient=true
+
+// Pod is a collection of containers, used as either input (create, update) or as output (list, get).
 type Pod struct {
 	TypeMeta `json:",inline"`
-	ObjectMeta `json:"metadata,omitempty"`
+	ObjectMeta           `json:"metadata,omitempty"`
 
+	// Spec defines the behavior of a pod.
 	Spec   PodSpec `json:"spec,omitempty"`
 
+	// Status represents the current information about a pod. This data may not be up
+	// to date.
 	Status PodStatus `json:"status,omitempty"`
 }
 
-type PodList struct {
-	TypeMeta `json:",inline"`
-	ListMeta `json:"metadata,omitempty"`
-
-	Items []Pod `json:"items"`
+func (pod Pod) GetNodeName() string {
+	return pod.Spec.NodeName
 }
 
+// PodTemplateSpec describes the data a pod should have when created from a template
 type PodTemplateSpec struct {
+	// Metadata of the pods created from this template.
 	ObjectMeta `json:"metadata,omitempty"`
 
+	// Spec defines the behavior of a pod.
 	Spec PodSpec `json:"spec,omitempty"`
 }
 
+// +genclient=true
+
+// PodTemplate describes a template for creating copies of a predefined pod.
 type PodTemplate struct {
 	TypeMeta `json:",inline"`
-	ObjectMeta `json:"metadata,omitempty"`
+	ObjectMeta           `json:"metadata,omitempty"`
 
+	// Template defines the pods that will be created from this pod template
 	Template PodTemplateSpec `json:"template,omitempty"`
 }
 
+// PodTemplateList is a list of PodTemplates.
 type PodTemplateList struct {
 	TypeMeta `json:",inline"`
 	ListMeta `json:"metadata,omitempty"`
 
 	Items []PodTemplate `json:"items"`
 }
-
 type ReplicationControllerSpec struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 	Selector map[string]string `json:"selector,omitempty"`
@@ -1146,102 +1399,6 @@ type Node struct {
 	Status NodeStatus `json:"status,omitempty"`
 }
 
-func PrintJob(job Job) {
-	fmt.Println("Job Message:")
-	fmt.Println("Job Object: ", job.ObjectMeta)
-	fmt.Println("Job TypeMeta:", job.TypeMeta)
-	fmt.Println("Job Spec:", job.Spec)
-	fmt.Println("Job Status", job.Status)
-}
-
-func PrintReplicationController(replicationcontroller ReplicationController) {
-	fmt.Print("Replicationcontroller Message:\n")
-	fmt.Print("ReplicationcontrollerName: " + replicationcontroller.Name + "\n")
-	fmt.Print("Namespace: " + replicationcontroller.Namespace + "\n")
-	fmt.Print("Kind: " + replicationcontroller.TypeMeta.APIVersion + "\n")
-	fmt.Print("APIVersion: " + replicationcontroller.TypeMeta.Kind + "\n")
-	fmt.Print("CreationTimestamp: " + replicationcontroller.CreationTimestamp + "\n")
-	fmt.Print("Labels: ")
-	fmt.Print(replicationcontroller.Labels)
-	fmt.Print("\n")
-	fmt.Print("Spec: ")
-	fmt.Print(replicationcontroller.Spec)
-	fmt.Print("\n")
-	fmt.Print("Status: ")
-	fmt.Print(replicationcontroller.Status)
-	fmt.Print("\n")
-}
-
-func PrintService(service Service) {
-	fmt.Print("Service Message:\n")
-	fmt.Print("ServiceName: " + service.Name + "\n")
-	fmt.Print("Namespace: " + service.Namespace + "\n")
-	fmt.Print("Kind: " + service.TypeMeta.APIVersion + "\n")
-	fmt.Print("APIVersion: " + service.TypeMeta.Kind + "\n")
-	fmt.Print("CreationTimestamp: " + service.CreationTimestamp + "\n")
-	fmt.Print("Labels: ")
-	fmt.Print(service.Labels)
-	fmt.Print("\n")
-	fmt.Print("Spec: ")
-	fmt.Print(service.Spec)
-	fmt.Print("\n")
-	fmt.Print("Status: ")
-	fmt.Print(service.Status)
-	fmt.Print("\n")
-}
-
-func PrintNode(node Node) {
-	fmt.Print("Node Message:\n")
-	fmt.Print("NodeName: " + node.Name + "\n")
-	fmt.Print("Namespace: " + node.Namespace + "\n")
-	fmt.Print("Kind: " + node.TypeMeta.APIVersion + "\n")
-	fmt.Print("APIVersion: " + node.TypeMeta.Kind + "\n")
-	fmt.Print("CreationTimestamp: " + node.CreationTimestamp + "\n")
-	fmt.Print("Labels: ")
-	fmt.Print(node.Labels)
-	fmt.Print("\n")
-	fmt.Print("Spec: ")
-	fmt.Print(node.Spec)
-	fmt.Print("\n")
-	fmt.Print("Status: ")
-	fmt.Print(node.Status)
-	fmt.Print("\n")
-}
-func PrintNamespace(namespace Namespace) {
-	fmt.Print("Namespace Message:\n")
-	fmt.Print("Name: " + namespace.Name + "\n")
-	fmt.Print("CreationTimestamp: " + namespace.CreationTimestamp + "\n")
-	fmt.Print("Labels: ")
-	fmt.Print(namespace.Labels)
-	fmt.Print("\n")
-	fmt.Print("Spec: ")
-	fmt.Print(namespace.Spec)
-	fmt.Print("\n")
-	fmt.Print("Status: ")
-	fmt.Print(namespace.Status)
-	fmt.Print("\n")
-	fmt.Print("ObjectMeta: ")
-	fmt.Print(namespace.ObjectMeta)
-	fmt.Print("\n")
-}
-func PrintPod(pod Pod) {
-	fmt.Print("Pod Message:\n")
-	fmt.Print("Name: " + pod.Name + "\n")
-	fmt.Print("CreationTimestamp: " + pod.CreationTimestamp + "\n")
-	fmt.Print("spec: ")
-	fmt.Print(pod.Spec)
-	fmt.Print("\n")
-	fmt.Print("ObjectMeta: ")
-	fmt.Print(pod.ObjectMeta)
-	fmt.Print("\n")
-	fmt.Print("Status: ")
-	fmt.Print(pod.Status)
-	fmt.Print("\n")
-	fmt.Print("Labels: ")
-	fmt.Print(pod.Labels)
-	fmt.Print("\n")
-}
-
 type NodeList struct {
 	TypeMeta `json:",inline"`
 	ListMeta `json:"metadata,omitempty"`
@@ -1331,37 +1488,51 @@ type PodLogOptions struct {
 type PodAttachOptions struct {
 	TypeMeta `json:",inline"`
 
+	// Stdin if true indicates that stdin is to be redirected for the attach call
 	Stdin     bool `json:"stdin,omitempty"`
 
+	// Stdout if true indicates that stdout is to be redirected for the attach call
 	Stdout    bool `json:"stdout,omitempty"`
 
+	// Stderr if true indicates that stderr is to be redirected for the attach call
 	Stderr    bool `json:"stderr,omitempty"`
 
+	// TTY if true indicates that a tty will be allocated for the attach call
 	TTY       bool `json:"tty,omitempty"`
 
+	// Container to attach to.
 	Container string `json:"container,omitempty"`
 }
 
+// PodExecOptions is the query options to a Pod's remote exec call
 type PodExecOptions struct {
-	TypeMeta `json:",inline"`
+	TypeMeta
 
-	Stdin     bool `json:"stdin,omitempty"`
+	// Stdin if true indicates that stdin is to be redirected for the exec call
+	Stdin     bool
 
-	Stdout    bool `json:"stdout,omitempty"`
+	// Stdout if true indicates that stdout is to be redirected for the exec call
+	Stdout    bool
 
-	Stderr    bool `json:"stderr,omitempty"`
+	// Stderr if true indicates that stderr is to be redirected for the exec call
+	Stderr    bool
 
-	TTY       bool `json:"tty,omitempty"`
+	// TTY if true indicates that a tty will be allocated for the exec call
+	TTY       bool
 
-	Container string `json:"container,omitempty"`
+	// Container in which to execute the command.
+	Container string
 
-	Command   []string `json:"command"`
+	// Command is the remote command to execute; argv array; not executed within a shell.
+	Command   []string
 }
 
+// PodProxyOptions is the query options to a Pod's proxy call
 type PodProxyOptions struct {
-	TypeMeta `json:",inline"`
+	TypeMeta
 
-	Path string `json:"path,omitempty"`
+	// Path is the URL path to use for the current proxy request
+	Path string
 }
 
 type NodeProxyOptions struct {
@@ -1691,81 +1862,37 @@ type JobList struct {
 
 // JobSpec describes how the job execution will look like.
 type JobSpec struct {
-	// Parallelism specifies the maximum desired number of pods the job should
-	// run at any given time. The actual number of pods running in steady state will
-	// be less than this number when ((.spec.completions - .status.successful) < .spec.parallelism),
-	// i.e. when the work left to do is less than max parallelism.
-	// More info: http://releases.k8s.io/HEAD/docs/user-guide/jobs.md
 	Parallelism           *int32 `json:"parallelism,omitempty"`
 
-	// Completions specifies the desired number of successfully finished pods the
-	// job should be run with.  Setting to nil means that the success of any
-	// pod signals the success of all pods, and allows parallelism to have any positive
-	// value.  Setting to 1 means that parallelism is limited to 1 and the success of that
-	// pod signals the success of the job.
-	// More info: http://releases.k8s.io/HEAD/docs/user-guide/jobs.md
 	Completions           *int32 `json:"completions,omitempty"`
 
-	// Optional duration in seconds relative to the startTime that the job may be active
-	// before the system tries to terminate it; value must be positive integer
 	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty"`
 
-	// Selector is a label query over pods that should match the pod count.
-	// Normally, the system sets this field for you.
-	// More info: http://releases.k8s.io/HEAD/docs/user-guide/labels.md#label-selectors
 	Selector              *LabelSelector `json:"selector,omitempty"`
 
-	// ManualSelector controls generation of pod labels and pod selectors.
-	// Leave `manualSelector` unset unless you are certain what you are doing.
-	// When false or unset, the system pick labels unique to this job
-	// and appends those labels to the pod template.  When true,
-	// the user is responsible for picking unique labels and specifying
-	// the selector.  Failure to pick a unique label may cause this
-	// and other jobs to not function correctly.  However, You may see
-	// `manualSelector=true` in jobs that were created with the old `extensions/v1beta1`
-	// API.
-	// More info: http://releases.k8s.io/HEAD/docs/design/selector-generation.md
 	ManualSelector        *bool `json:"manualSelector,omitempty"`
 
-	// Template is the object that describes the pod that will be created when
-	// executing a job.
-	// More info: http://releases.k8s.io/HEAD/docs/user-guide/jobs.md
 	Template              PodTemplateSpec `json:"template"`
 }
 
-// JobStatus represents the current state of a Job.
 type JobStatus struct {
-	// Conditions represent the latest available observations of an object's current state.
-	// More info: http://releases.k8s.io/HEAD/docs/user-guide/jobs.md
 	Conditions     []JobCondition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
-	// StartTime represents time when the job was acknowledged by the Job Manager.
-	// It is not guaranteed to be set in happens-before order across separate operations.
-	// It is represented in RFC3339 form and is in UTC.
 	StartTime      string `json:"startTime,omitempty"`
 
-	// CompletionTime represents time when the job was completed. It is not guaranteed to
-	// be set in happens-before order across separate operations.
-	// It is represented in RFC3339 form and is in UTC.
 	CompletionTime *string `json:"completionTime,omitempty"`
 
-	// Active is the number of actively running pods.
 	Active         int32 `json:"active,omitempty"`
 
-	// Succeeded is the number of pods which reached Phase Succeeded.
 	Succeeded      int32 `json:"succeeded,omitempty"`
 
-	// Failed is the number of pods which reached Phase Failed.
 	Failed         int32 `json:"failed,omitempty"`
 }
 
 type JobConditionType string
 
-// These are valid conditions of a job.
 const (
-	// JobComplete means the job has completed its execution.
 	JobComplete JobConditionType = "Complete"
-	// JobFailed means the job has failed its execution.
 	JobFailed JobConditionType = "Failed"
 )
 

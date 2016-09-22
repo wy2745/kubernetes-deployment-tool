@@ -22,6 +22,8 @@ const (
 	shortTermWorkCompletion int32 = 1000
 	cpu_Use = 400
 	mem_Use = 10
+	standardCpu_use = 400
+	standardMem_use = 200
 	longTermName = "ntest"
 	longTermService = "nservice"
 )
@@ -36,16 +38,17 @@ type WorkLoad struct {
 type channel []chan string
 
 type WorkloadController struct {
-	Total      *WorkLoad
-	LongTerm   *WorkLoad
-	ShortTerm  *WorkLoad
-	JobMonitor *channel
-	JobWorker  *channel
-	JobNum     int
-	JobName    []string
+	Total     *WorkLoad
+	LongTerm  *WorkLoad
+	ShortTerm *WorkLoad
+	Monitor   *channel
+	Worker    *channel
+	Num       int
+	Name      []string
+	NodeName  []string
 }
 
-func Start() {
+func StartJobVersion() {
 	var WL *WorkloadController
 	var line string
 	scanner := bufio.NewScanner(os.Stdin)
@@ -99,17 +102,56 @@ func Start() {
 	}
 }
 
+func StartPodVersion() {
+	var WL *WorkloadController
+	var line string
+	scanner := bufio.NewScanner(os.Stdin)
+	mode := Request.Test
+	//var WL *WorkloadController
+	fmt.Println("^_^")
+	fmt.Println("1.查看状态")
+	fmt.Println("2.设定WorkLoad参数并部署任务")
+	fmt.Println("3.退出")
+	for {
+		scanner.Scan()
+		line = scanner.Text()
+		switch line {
+		case "1":
+			GetPodStatus(WL, mode)
+		case "2":
+			if WL != nil {
+				WL = WL.EndWorkLoad(mode)
+			}
+			WL = ScheduleTest(scanner, mode)
+		case "3":
+			if WL != nil {
+				WL = WL.EndWorkLoad(mode)
+			}
+		case "4":
+			if WL != nil {
+				WL = WL.EndWorkLoad(mode)
+			}
+			return
+		//fmt.Println("3")
+		}
+		fmt.Println("1.查看状态")
+		fmt.Println("2.设定WorkLoad参数并部署任务")
+		fmt.Println("3.退出")
+
+	}
+}
+
 func escapeMysqlQuery(path string) string {
 	str := strings.Replace(path, "./", "\"./", 1)
 	return str + "\""
 }
 
 func GetJobStatus(WL *WorkloadController) {
-	if WL == nil || len(WL.JobName) == 0 {
+	if WL == nil || len(WL.Name) == 0 {
 		fmt.Println("目前没有在运行的任务")
 		return
 	}
-	for _, jobName := range WL.JobName {
+	for _, jobName := range WL.Name {
 		job := Request.GetJobByNameAndNamespace("default", jobName, Request.Caicloud)
 		fmt.Println("JobName: ", job.Name)
 		fmt.Println("    actice: ", job.Status.Active)
@@ -122,6 +164,17 @@ func GetJobStatus(WL *WorkloadController) {
 			fmt.Println("Status: Not Finished.")
 		}
 		fmt.Println("total: ", job.Spec.Completions, " finished: ", job.Status.Succeeded)
+	}
+}
+func GetPodStatus(WL *WorkloadController, mode string) {
+	if WL == nil || len(WL.Name) == 0 {
+		fmt.Println("目前没有在运行的Pod")
+		return
+	}
+	for _, podName := range WL.Name {
+		pod := Request.GetPodByNameAndNamespace("default", podName, mode)
+		fmt.Println("PodName: ", pod.Name)
+		fmt.Println("    state: ", pod.Status.Phase)
 	}
 }
 
@@ -197,10 +250,6 @@ func record(scanner *bufio.Scanner, ) *WorkloadController {
 	UploadLongTermMission(WL.LongTerm.cpuWorkLoad_int, WL.LongTerm.cpuWorkLoad_int, WL.LongTerm.memWorkLoad_int, WL.LongTerm.memWorkLoad_int)
 	UploadLongTermService(longTermName, longTermService, 80, 30888)
 	return WL
-	//fmt.Print("输入任何字符以结束:\n")
-	//scanner.Scan()
-	//line = scanner.Text()
-	//EndShortTermWorkLoadV2(WL)
 }
 
 func MissionRecorder() {
@@ -281,7 +330,7 @@ func MissionRecorder() {
 	}
 }
 func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
-	WL.JobNum = JobNum
+	WL.Num = JobNum
 	var jobNames []string
 	//建立channel组，分别监听
 	var resultChans [] chan string
@@ -320,8 +369,7 @@ func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
 			}
 		}()
 	}
-	WL.JobName = jobNames
-	fmt.Println("haha:             ", WL.JobName)
+	WL.Name = jobNames
 
 	//构建一个新的检查job组运行情况的go func，基本思想，建立多个线程，负责单一检查某个job的运行状态，另外建一个线程负责收听job的运行状态，重建job
 	for index, jobName := range jobNames {
@@ -345,8 +393,8 @@ func UploadShortTermMissionV2(JobNum int, WL *WorkloadController) {
 			}
 		}()
 	}
-	WL.JobMonitor = &quitMoinitors
-	WL.JobWorker = &quitWorkLoaders
+	WL.Monitor = &quitMoinitors
+	WL.Worker = &quitWorkLoaders
 }
 
 func UploadLongTermService(labelName string, name string, port int32, nodeport int32) {
@@ -443,13 +491,89 @@ func UploadShortTermMission(JobNum int, cpuMin int, cpuMax int, memMin int, memM
 	}
 	return &quitWorkLoaders, &quitMoinitors
 }
+func UploadShortTermPodMission(PodNum int, WL *WorkloadController) {
+	WL.Num = PodNum
+	var podNames []string
+	//建立channel组，分别监听
+	var resultChans [] chan string
+	var quitWorkLoaders channel
+	var quitMoinitors channel
+	//生成并记录pod组的名称
+	for index := 0; index < PodNum; index++ {
+		var ind int
+		var pon string
+		ind = index
+		podName := "test" + strconv.Itoa(ind)
+		fmt.Println(podName)
+		podNames = append(podNames, podName)
+		resultChan := make(chan string)
+		resultChans = append(resultChans, resultChan)
+		quitWorkLoader := make(chan string)
+		quitWorkLoaders = append(quitWorkLoaders, quitWorkLoader)
+		quitMoinitor := make(chan string)
+		quitMoinitors = append(quitMoinitors, quitMoinitor)
+
+		go func() {
+			for {
+				select {
+				case pon = <-resultChan:
+					fmt.Println("正在删除旧pod: ", pon)
+					Request.DeletePod("default", pon, Request.Caicloud)
+					fmt.Println("正在创建新pod: ", pon)
+					Request.CreatePod("default", short_cpu_bound, pon, strconv.Itoa(cpu_Use) + cpu, strconv.Itoa(cpu_Use) + cpu, strconv.Itoa(mem_Use) + mem_M, strconv.Itoa(mem_Use) + mem_M, "./home/wsc 100 1000", Request.Caicloud)
+				case <-quitWorkLoader:
+					fmt.Println("进程杀死", ind)
+					return
+				default:
+					continue
+				}
+			}
+		}()
+	}
+	WL.Name = podNames
+
+	//构建一个新的检查pod组运行情况的go func，基本思想，建立多个线程，负责单一检查某个pod的运行状态，另外建一个线程负责收听pod的运行状态，重建pod
+	for index, podName := range podNames {
+		var ind int
+		var pon string
+		pon = podName
+		ind = index
+		go func() {
+			for {
+				select {
+				case <-quitMoinitors[ind]:
+					fmt.Println("进程杀死", ind)
+					return
+				default:
+					if Request.PodComplete(Request.GetPodByNameAndNamespace("default", pon, Request.Caicloud)) {
+						fmt.Print("不存在，需要创建\n\n\n")
+						resultChans[ind] <- pon
+						time.Sleep(time.Second * 3)
+					}
+				}
+			}
+		}()
+	}
+	WL.Monitor = &quitMoinitors
+	WL.Worker = &quitWorkLoaders
+
+}
 
 func EndShortTermWorkLoadV2(WL *WorkloadController) {
-	for index := 0; index < WL.JobNum; index++ {
-		(*WL.JobMonitor)[index] <- "q"
-		(*WL.JobWorker)[index] <- "q"
+	for index := 0; index < WL.Num; index++ {
+		(*WL.Monitor)[index] <- "q"
+		(*WL.Worker)[index] <- "q"
 		jobName := "test" + strconv.Itoa(index)
 		Request.DeleteJob("default", jobName, Request.Caicloud)
+	}
+}
+
+func EndShortTermPodWorkLoad(WL *WorkloadController) {
+	for index := 0; index < WL.Num; index++ {
+		(*WL.Monitor)[index] <- "q"
+		(*WL.Worker)[index] <- "q"
+		podName := "test" + strconv.Itoa(index)
+		Request.DeletePod("default", podName, Request.Caicloud)
 	}
 }
 func EndShortTermWorkLoad(quitWorkLoaders *[]chan string, quitMoinitors *[]chan string, boundNum int) {
@@ -638,4 +762,131 @@ func WorkLoadDisplay(wl *WorkloadController) {
 	fmt.Print("长时任务负载为:\n", "Cpu: ", wl.LongTerm.cpuWorkLoad, "\n", "Mem: ", wl.LongTerm.memWorkLoad, "\n")
 	fmt.Print("短时任务负载为:\n", "Cpu: ", wl.ShortTerm.cpuWorkLoad, "\n", "Mem: ", wl.ShortTerm.memWorkLoad, "\n\n")
 }
+
+func ScheduleTest(scanner *bufio.Scanner, mode string) *WorkloadController {
+	fmt.Print("^_^\n")
+	fmt.Print("请输入总负载信息\n")
+	fmt.Print("总负载Cpu(单位:m 整数):")
+	var TotalCpu, TotalMem int
+	var err error
+	var line string
+	var WL *WorkloadController
+	scanner.Scan()
+	line = scanner.Text()
+
+	for TotalCpu, err = strconv.Atoi(line); err != nil; {
+		fmt.Print("必须输入整数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		TotalCpu, err = strconv.Atoi(line)
+
+	}
+	fmt.Print("\n总负载Mem(单位:Mi 整数):")
+	scanner.Scan()
+	line = scanner.Text()
+	for TotalMem, err = strconv.Atoi(line); err != nil; err = nil {
+		fmt.Print("必须输入整数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		TotalMem, err = strconv.Atoi(line)
+	}
+	WL = NewWorkLoadController(TotalCpu, TotalMem, float32(1), float32(1))
+	WorkLoadDisplay(WL)
+
+	fmt.Println("部署连续任务")
+
+	cpuBound := WL.ShortTerm.cpuWorkLoad_int / standardCpu_use
+	memBound := WL.ShortTerm.memWorkLoad_int / standardMem_use
+	var boundNum int
+	if cpuBound >= memBound {
+		boundNum = cpuBound
+	} else {
+		boundNum = memBound
+	}
+	fmt.Println("实际调整负载为，cpu: ", boundNum * standardCpu_use, cpu, " mem: ", boundNum * standardMem_use, mem_M)
+
+	fmt.Println("size: ", boundNum)
+	WL.Num = boundNum
+	WL.UploadWorkLoad(mode)
+	time.Sleep(time.Second * 3)
+	log(WL, mode)
+	return WL
+}
+func contain(nodeNames *[]string, nodeName string) bool {
+	for _, node := range *nodeNames {
+		if node == nodeName {
+			return true
+		}
+	}
+	return false
+}
+
+func (Wl *WorkloadController) UploadWorkLoad(mode string) {
+	if Wl == nil {
+		return
+	}
+
+	for index := 0; index < Wl.Num; index++ {
+		podName := "test" + strconv.Itoa(index)
+		Wl.Name = append(Wl.Name, podName)
+		Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardMem_use) + mem_M, strconv.Itoa(standardMem_use) + mem_M, "./home/wsc 100 1000", mode)
+		//pod := Request.GetPodByNameAndNamespace("default", podName, mode)
+		//inputFile.WriteString("PodName: " + pod.Name + "被部署到了node " + pod.Spec.NodeName + "上")
+		//if ( Wl.NodeName != nil && contain(&Wl.NodeName, pod.Spec.NodeName)) {
+		//	inputFile.WriteString("为旧node，node状态如下")
+		//	_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
+		//	inputFile.WriteString(str2)
+		//	//fmt.Println("为旧node，node状态如下")
+		//} else {
+		//	Wl.NodeName = append(Wl.NodeName, pod.Spec.NodeName)
+		//	//fmt.Println("为新node，node状态如下")
+		//	Request.GetNodeByName(pod.Spec.NodeName, mode)
+		//	inputFile.WriteString("为新node，node状态如下")
+		//	_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
+		//	inputFile.WriteString(str2)
+		//}
+		time.Sleep(time.Second * 2)
+	}
+}
+
+func log(Wl *WorkloadController, mode string) {
+	inputFile, inputError := os.Create("/Users/panda/Desktop/record.txt")
+	if inputError != nil {
+		fmt.Printf("An error occurred on opening the inputfile\n" +
+			"Does the file exist?\n" +
+			"Have you got acces to it?\n")
+		return // exit the function on error
+	}
+	defer inputFile.Close()
+	for index := 0; index < Wl.Num; index++ {
+		pod := Request.GetPodByNameAndNamespace("default", Wl.Name[index], mode)
+		inputFile.WriteString("PodName: " + pod.Name + "被部署到了node " + pod.Spec.NodeName + "上")
+		if ( Wl.NodeName != nil && contain(&Wl.NodeName, pod.Spec.NodeName)) {
+			inputFile.WriteString("为旧node，node状态如下")
+			_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
+			inputFile.WriteString(str2)
+			//fmt.Println("为旧node，node状态如下")
+		} else {
+			Wl.NodeName = append(Wl.NodeName, pod.Spec.NodeName)
+			//fmt.Println("为新node，node状态如下")
+			Request.GetNodeByName(pod.Spec.NodeName, mode)
+			inputFile.WriteString("为新node，node状态如下")
+			_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
+			inputFile.WriteString(str2)
+		}
+	}
+}
+
+func (Wl *WorkloadController) EndWorkLoad(mode string) *WorkloadController {
+	if Wl == nil {
+		return nil
+	}
+	for _, podName := range Wl.Name {
+		Request.DeletePod("default", podName, mode)
+		fmt.Println("Pod ", podName, "已删除")
+	}
+	fmt.Println("workLoad 删除完毕")
+	return nil
+}
+
 

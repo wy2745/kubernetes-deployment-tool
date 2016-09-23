@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"./ab"
 	WorkLoadController "./workload"
+	//"./request"
 	//"./locust"
 )
 
@@ -20,6 +21,7 @@ func main() {
 	//WorkLoadController.Start()
 	WorkLoadController.StartPodVersion()
 	//Request.GetAllService_Test("default")
+	//fmt.Println(request.GetPodsOfNamespace("default", request.Test))
 	//Request.GetAllService("default", Request.Caicloud)
 	//Request.GetJobOfNamespace("default", Request.Caicloud)
 	//Request.CreateJob("default", "docker.io/zilinglius/workload:short-general", "wsg", int32(5), "400m", "500m", "10Mi", "20Mi", "./home/wsg 200000000", Request.Caicloud)

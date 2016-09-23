@@ -8,8 +8,10 @@ import (
 	"strings"
 	Request "../request"
 	Locust "../locust"
+	"../interf"
 	"../ab"
 	"time"
+	"math/rand"
 )
 
 const (
@@ -173,17 +175,17 @@ func GetPodStatus(WL *WorkloadController, mode string) {
 	}
 	for _, podName := range WL.Name {
 		pod := Request.GetPodByNameAndNamespace("default", podName, mode)
-		fmt.Println("PodName: ", pod.Name)
-		fmt.Println("    state: ", pod.Status.Phase)
+		fmt.Println("PodName: ", interf.GetName(*pod))
+		fmt.Println("    state: ", interf.GetStautsPhase(*pod))
 	}
 }
 
 func GetLongTermStatus() {
 	Pods := Request.GetPodsOfNamespace("default", Request.Caicloud)
-	namespace, name := Request.FindPodByLabelName(longTermName, &Pods)
+	namespace, name := Request.FindPodByLabelName(longTermName, Pods)
 	pod := Request.GetPodByNameAndNamespace(namespace, name, Request.Caicloud)
-	fmt.Println("podName: ", pod.Name)
-	fmt.Println("status: ", pod.Status.Phase)
+	fmt.Println("podName: ", interf.GetName(*pod))
+	fmt.Println("status: ", interf.GetStautsPhase(*pod))
 	Service := Request.GetServicesOfNamespaceAndName("default", longTermService, Request.Caicloud)
 	fmt.Println("serviceName: ", Service.Name)
 	for _, port := range Service.Spec.Ports {
@@ -421,7 +423,7 @@ func EndLongTermMission(podName string, serviceName string, namespace string) {
 	Request.DeleteService(namespace, serviceName, Request.Caicloud)
 	Request.DeleteReplicationController(namespace, podName, Request.Caicloud)
 	pods := Request.GetPodsOfNamespace("default", Request.Caicloud)
-	names, name := Request.FindPodByLabelName(longTermName, &pods)
+	names, name := Request.FindPodByLabelName(longTermName, pods)
 	Request.DeletePod(names, name, Request.Caicloud)
 
 	fmt.Println("长期任务删除成功")
@@ -545,7 +547,7 @@ func UploadShortTermPodMission(PodNum int, WL *WorkloadController) {
 					fmt.Println("进程杀死", ind)
 					return
 				default:
-					if Request.PodComplete(Request.GetPodByNameAndNamespace("default", pon, Request.Caicloud)) {
+					if Request.PodComplete(*Request.GetPodByNameAndNamespace("default", pon, Request.Caicloud)) {
 						fmt.Print("不存在，需要创建\n\n\n")
 						resultChans[ind] <- pon
 						time.Sleep(time.Second * 3)
@@ -702,7 +704,7 @@ func MissionRecord() {
 						fmt.Println("进程杀死", ind)
 						return
 					default:
-						if Request.PodComplete(Request.GetPodByNameAndNamespace("default", pon, Request.Caicloud)) {
+						if Request.PodComplete(*Request.GetPodByNameAndNamespace("default", pon, Request.Caicloud)) {
 							fmt.Print("不存在，需要创建\n\n\n")
 							resultChans[ind] <- pon
 							time.Sleep(time.Second * 3)
@@ -795,20 +797,23 @@ func ScheduleTest(scanner *bufio.Scanner, mode string) *WorkloadController {
 
 	fmt.Println("部署连续任务")
 
-	cpuBound := WL.ShortTerm.cpuWorkLoad_int / standardCpu_use
-	memBound := WL.ShortTerm.memWorkLoad_int / standardMem_use
-	var boundNum int
-	if cpuBound >= memBound {
-		boundNum = cpuBound
-	} else {
-		boundNum = memBound
-	}
-	fmt.Println("实际调整负载为，cpu: ", boundNum * standardCpu_use, cpu, " mem: ", boundNum * standardMem_use, mem_M)
-
-	fmt.Println("size: ", boundNum)
-	WL.Num = boundNum
+	//cpuBound := WL.ShortTerm.cpuWorkLoad_int / standardCpu_use
+	//memBound := WL.ShortTerm.memWorkLoad_int / standardMem_use
+	//var boundNum int
+	//if cpuBound >= memBound {
+	//	boundNum = cpuBound
+	//} else {
+	//	boundNum = memBound
+	//}
+	//fmt.Println("实际调整负载为，cpu: ", boundNum * standardCpu_use, cpu, " mem: ", boundNum * standardMem_use, mem_M)
+	//
+	//fmt.Println("size: ", boundNum)
+	//WL.Num = boundNum
 	WL.UploadWorkLoad(mode)
-	time.Sleep(time.Second * 3)
+	fmt.Println("搞定")
+	scanner.Scan()
+	line = scanner.Text()
+
 	log(WL, mode)
 	return WL
 }
@@ -825,28 +830,27 @@ func (Wl *WorkloadController) UploadWorkLoad(mode string) {
 	if Wl == nil {
 		return
 	}
-
-	for index := 0; index < Wl.Num; index++ {
-		podName := "test" + strconv.Itoa(index)
-		Wl.Name = append(Wl.Name, podName)
-		Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardMem_use) + mem_M, strconv.Itoa(standardMem_use) + mem_M, "./home/wsc 100 1000", mode)
-		//pod := Request.GetPodByNameAndNamespace("default", podName, mode)
-		//inputFile.WriteString("PodName: " + pod.Name + "被部署到了node " + pod.Spec.NodeName + "上")
-		//if ( Wl.NodeName != nil && contain(&Wl.NodeName, pod.Spec.NodeName)) {
-		//	inputFile.WriteString("为旧node，node状态如下")
-		//	_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
-		//	inputFile.WriteString(str2)
-		//	//fmt.Println("为旧node，node状态如下")
-		//} else {
-		//	Wl.NodeName = append(Wl.NodeName, pod.Spec.NodeName)
-		//	//fmt.Println("为新node，node状态如下")
-		//	Request.GetNodeByName(pod.Spec.NodeName, mode)
-		//	inputFile.WriteString("为新node，node状态如下")
-		//	_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
-		//	inputFile.WriteString(str2)
-		//}
-		time.Sleep(time.Second * 2)
+	allocMap := allocLoad(Wl.ShortTerm.cpuWorkLoad_int, Wl.ShortTerm.memWorkLoad_int)
+	count := 0
+	for key, value := range allocMap {
+		for key2, value2 := range value {
+			for i := 0; i < value2; i++ {
+				podName := "test" + strconv.Itoa(count)
+				Wl.Name = append(Wl.Name, podName)
+				Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(key) + cpu, strconv.Itoa(key) + cpu, strconv.Itoa(key2) + mem_M, strconv.Itoa(key2) + mem_M, "./home/wsc 100 1000", mode)
+				//time.Sleep(time.Second * 2)
+				count++
+			}
+		}
 	}
+	Wl.Num = count
+
+	//for index := 0; index < Wl.Num; index++ {
+	//	podName := "test" + strconv.Itoa(index)
+	//	Wl.Name = append(Wl.Name, podName)
+	//	Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardMem_use) + mem_M, strconv.Itoa(standardMem_use) + mem_M, "./home/wsc 100 1000", mode)
+	//	time.Sleep(time.Second * 2)
+	//}
 }
 
 func log(Wl *WorkloadController, mode string) {
@@ -858,21 +862,30 @@ func log(Wl *WorkloadController, mode string) {
 		return // exit the function on error
 	}
 	defer inputFile.Close()
+	var cpusum int = 0
+	var memsum int = 0
 	for index := 0; index < Wl.Num; index++ {
 		pod := Request.GetPodByNameAndNamespace("default", Wl.Name[index], mode)
-		inputFile.WriteString("PodName: " + pod.Name + "被部署到了node " + pod.Spec.NodeName + "上")
-		if ( Wl.NodeName != nil && contain(&Wl.NodeName, pod.Spec.NodeName)) {
-			inputFile.WriteString("为旧node，node状态如下")
-			_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
-			inputFile.WriteString(str2)
+		cpusum += getCpuInt(interf.GetCpu(*pod))
+		memsum += getMemInt(interf.GetMem(*pod))
+		//inputFile.WriteString("PodName: " + interf.GetName(*pod) + "被部署到了node " + interf.GetNodeName(*pod) + "上")
+		inputFile.WriteString("PodName: " + interf.GetName(*pod))
+		if ( Wl.NodeName != nil && contain(&Wl.NodeName, interf.GetNodeName(*pod))) {
+			inputFile.WriteString("为旧node")
+			str := "pod 负载为" + " cpu: " + strconv.Itoa(cpusum) + cpu + " memory: " + strconv.Itoa(memsum) + mem_M + "\n"
+			inputFile.WriteString(str)
+			//_, str2 := Request.GetNodeByName(interf.GetNodeName(*pod), mode)
+			//inputFile.WriteString(str2)
 			//fmt.Println("为旧node，node状态如下")
 		} else {
-			Wl.NodeName = append(Wl.NodeName, pod.Spec.NodeName)
+			Wl.NodeName = append(Wl.NodeName, interf.GetNodeName(*pod))
 			//fmt.Println("为新node，node状态如下")
-			Request.GetNodeByName(pod.Spec.NodeName, mode)
-			inputFile.WriteString("为新node，node状态如下")
-			_, str2 := Request.GetNodeByName(pod.Spec.NodeName, mode)
-			inputFile.WriteString(str2)
+			Request.GetNodeByName(interf.GetNodeName(*pod), mode)
+			inputFile.WriteString("为新node")
+			str := "pod 负载为" + " cpu: " + strconv.Itoa(cpusum) + cpu + " memory: " + strconv.Itoa(memsum) + mem_M + "\n"
+			inputFile.WriteString(str)
+			//_, str2 := Request.GetNodeByName(interf.GetNodeName(*pod), mode)
+			//inputFile.WriteString(str2)
 		}
 	}
 }
@@ -887,6 +900,93 @@ func (Wl *WorkloadController) EndWorkLoad(mode string) *WorkloadController {
 	}
 	fmt.Println("workLoad 删除完毕")
 	return nil
+}
+
+func allocLoad(totalCpu int, totalMem int) map[int](map[int]int) {
+	var result map[int](map[int]int) = make(map[int](map[int]int))
+
+	for {
+		var result1 map[int](map[int]int) = make(map[int](map[int]int))
+		var cpu = totalCpu
+		var mem = totalMem
+		for i := 100; i <= 400; i += 100 {
+			maxCpu := cpu / i
+			s1 := rand.NewSource(time.Now().UnixNano())
+			r1 := rand.New(s1)
+			if maxCpu <= 0 {
+				break
+			}
+			ran1 := r1.Intn(maxCpu)
+			if ran1 == 0 {
+				continue
+			}
+			result2, memuse, num := allocMem(i * ran1 * totalMem / totalCpu, ran1)
+			result1[i] = result2
+			mem -= memuse
+			cpu -= num * i
+			if mem <= 0 || cpu <= 0 {
+				break
+			}
+		}
+		if mem <= 0 || cpu <= 0 {
+			result = result1
+			break
+		}
+	}
+
+	fmt.Println("分配情况如下")
+	fmt.Println("原负载是")
+	fmt.Println(" cpu: ", totalCpu)
+	fmt.Println(" mem: ", totalMem)
+	ncpu := 0
+	nmem := 0
+	for key, value := range result {
+		for key2, value2 := range value {
+			fmt.Println("cpu(", key, ") mem(", key2, ")数量:", value2)
+			ncpu += key * value2
+			nmem += key2 * value2
+		}
+	}
+	fmt.Println("均衡后负载是")
+	fmt.Println(" cpu: ", ncpu)
+	fmt.Println(" mem: ", nmem)
+	return result
+}
+func allocMem(mem int, num int) (map[int]int, int, int) {
+	memtmp := mem
+	numtmp := num
+	memuse := 0
+	for {
+		memtmp = mem
+		numtmp = num
+		memuse = 0
+		result := make(map[int]int)
+		fmt.Println(num, "  ", numtmp, " ", memuse)
+		for i := 50; i <= 200; i += 50 {
+			s1 := rand.NewSource(time.Now().UnixNano())
+			r1 := rand.New(s1)
+			ran1 := r1.Intn(numtmp) + 1
+			fmt.Println("ran", ran1)
+			numtmp -= ran1
+			fmt.Println("numtmp", numtmp)
+			memuse += ran1 * i
+			memtmp -= ran1 * i
+			result[i] = ran1
+			if numtmp <= 0 || memtmp <= 0 {
+				return result, memuse, num - numtmp
+			}
+		}
+	}
+}
+func getCpuInt(cpus string) int {
+	str := strings.Split(cpus, cpu)
+	in, _ := strconv.Atoi(str[0])
+	return in
+}
+func getMemInt(mems string) int {
+	str := strings.Split(mems, mem_M)
+	in, _ := strconv.Atoi(str[0])
+	return in
 }
 
 

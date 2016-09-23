@@ -3,6 +3,9 @@ package type124
 import (
 	"gopkg.in/inf.v0"
 	"fmt"
+	"../interf"
+	"strings"
+	"encoding/json"
 )
 
 
@@ -198,6 +201,13 @@ type ObjectMeta struct {
 	Annotations                map[string]string `json:"annotations,omitempty"`
 }
 
+func (om ObjectMeta) SetOmProp(labelname string, namespace string, name string) {
+	om.Labels = make(map[string]string)
+	om.Labels["name"] = name
+	om.Namespace = namespace
+	om.Name = name
+}
+
 const (
 	NamespaceDefault string = "default"
 	NamespaceAll string = ""
@@ -282,6 +292,12 @@ type TypeMeta struct {
 
 	APIVersion string `json:"apiVersion,omitempty"`
 }
+
+func (tm TypeMeta) SetTmProp(apiversion string, kind string) {
+	tm.APIVersion = apiversion
+	tm.Kind = kind
+}
+
 type ListMeta struct {
 	SelfLink        string `json:"selfLink,omitempty"`
 
@@ -639,6 +655,15 @@ type ResourceRequirements struct {
 	Requests ResourceList `json:"requests,omitempty"`
 }
 
+func (resource ResourceRequirements) SetResource(cpu_min string, cpu_max string, mem_max string, mem_min string) {
+	resource.Limits = make(map[ResourceName]string)
+	resource.Limits["cpu"] = cpu_max
+	resource.Limits["memory"] = mem_max
+	resource.Requests = make(map[ResourceName]string)
+	resource.Requests["cpu"] = cpu_min
+	resource.Requests["memory"] = mem_min
+}
+
 const (
 	TerminationMessagePathDefault string = "/dev/termination-log"
 )
@@ -757,6 +782,16 @@ type PodList struct {
 	ListMeta `json:"metadata,omitempty"`
 
 	Items []Pod `json:"items"`
+}
+
+func (podlist PodList)GetItems() []*interf.Podinface {
+	var v []*interf.Podinface
+	for _, pod := range podlist.Items {
+		var v1 *interf.Podinface
+		*v1 = pod
+		v = append(v, v1)
+	}
+	return v
 }
 
 type DNSPolicy string
@@ -945,8 +980,114 @@ type Pod struct {
 	Status PodStatus `json:"status,omitempty"`
 }
 
+func (p Pod) GetNamespace() string {
+	return p.Namespace
+}
+
+func (p Pod) GetLabel(name string) string {
+	return p.Labels[name]
+}
+func (p Pod) GetCpu() string {
+	return p.Spec.Containers[0].Resources.Requests["cpu"]
+}
+func (p Pod) GetMem() string {
+	return p.Spec.Containers[0].Resources.Requests["memory"]
+}
+func (p Pod) SetPod(apiversion string, kind string, name string, namespace string, image string, cpu string, mem string, command string) []byte {
+	var typeMeta TypeMeta
+	typeMeta.APIVersion = apiversion
+	typeMeta.Kind = kind
+	p.TypeMeta = typeMeta
+
+	var objectMedata ObjectMeta
+	objectMedata.Labels = make(map[string]string)
+	objectMedata.Labels["name"] = name
+	objectMedata.Namespace = namespace
+	objectMedata.Name = name
+	p.ObjectMeta = objectMedata
+
+	var resource ResourceRequirements
+	resource.Limits = make(map[ResourceName]string)
+	resource.Limits["cpu"] = cpu
+	resource.Limits["memory"] = mem
+	resource.Requests = make(map[ResourceName]string)
+	resource.Requests["cpu"] = cpu
+	resource.Requests["memory"] = mem
+	var container Container
+	container.Name = name
+	container.Image = image
+	container.Resources = resource
+	container.Command = strings.Split(command, " ")
+	var containers [1]Container
+	containers[0] = container
+	//
+	//pod.TypeMeta = typeMedata
+	//pod.ObjectMeta = objectMedata
+	//将container拷到pod.spec.containers
+	slice := []Container{container}
+	p.Spec.Containers = slice
+	p.Spec.RestartPolicy = "Always"
+	b, _ := json.Marshal(&p)
+
+	return b
+
+}
+
+func (p Pod) SetContainer(name string, image string, cpu string, mem string, command string, restart string) {
+	var resource ResourceRequirements
+	resource.Limits = make(map[ResourceName]string)
+	resource.Limits["cpu"] = cpu
+	resource.Limits["memory"] = mem
+	resource.Requests = make(map[ResourceName]string)
+	resource.Requests["cpu"] = cpu
+	resource.Requests["memory"] = mem
+	var container Container
+	container.Name = name
+	container.Image = image
+	container.Resources = resource
+	container.Command = strings.Split(command, " ")
+	var containers [1]Container
+	containers[0] = container
+	//
+	//pod.TypeMeta = typeMedata
+	//pod.ObjectMeta = objectMedata
+	//将container拷到pod.spec.containers
+	slice := []Container{container}
+	p.Spec.Containers = slice
+	p.Spec.RestartPolicy = "Always"
+}
+
+func (p Pod)SetTypeMeta(apiVersion string, kind string) {
+	var typeMeta TypeMeta
+	typeMeta.APIVersion = apiVersion
+	typeMeta.Kind = kind
+	p.TypeMeta = typeMeta
+}
+func (p Pod)SetObjectMeta(labelname string, namespace string, name string) {
+	var objectMedata ObjectMeta
+	objectMedata.Labels = make(map[string]string)
+	objectMedata.Labels["name"] = labelname
+	objectMedata.Namespace = namespace
+	objectMedata.Name = name
+	p.ObjectMeta = objectMedata
+}
+
 func (pod Pod) GetNodeName() string {
 	return pod.Spec.NodeName
+}
+
+func (pod Pod) GetName() string {
+	return pod.Name
+}
+
+func (pod Pod)GetStautsPhase() string {
+	return string(pod.Status.Phase)
+}
+func (pod Pod) GetContainerStatusesLen() int {
+	return len(pod.Status.ContainerStatuses)
+}
+func (pod Pod) GetReady() bool {
+	return pod.Status.ContainerStatuses[0].Ready
 }
 
 // PodTemplateSpec describes the data a pod should have when created from a template

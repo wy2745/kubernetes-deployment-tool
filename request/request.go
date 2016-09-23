@@ -3,11 +3,13 @@ package request
 import (
 	"net/http"
 	jsonParse "../json"
-	classType "../type124"
+	classType1 "../type124"
+	classType2 "../type137"
 	"io/ioutil"
 	"fmt"
 	"bytes"
 	"strings"
+	"../interf"
 )
 
 const (
@@ -66,7 +68,7 @@ func GetAllNode(mode string) {
 			fmt.Print(err)
 			return
 		}
-		var v classType.NodeList
+		var v classType1.NodeList
 		jsonParse.JsonUnmarsha(body, &v)
 		//for _, item := range v.Items {
 		//	classType.PrintNode(item)
@@ -88,7 +90,7 @@ func GetAllNamespace(mode string) {
 			fmt.Print(err)
 			return
 		}
-		var v classType.NamespaceList
+		var v classType1.NamespaceList
 		jsonParse.JsonUnmarsha(body, &v)
 		//for _, item := range v.Items {
 		//	classType.PrintNamespace(item)
@@ -110,7 +112,7 @@ func GetAllReplicationcontrollers(mode string) {
 			fmt.Print(err)
 			return
 		}
-		var v classType.ReplicationControllerList
+		var v classType1.ReplicationControllerList
 		jsonParse.JsonUnmarsha(body, &v)
 		//for _, item := range v.Items {
 		//	classType.PrintReplicationController(item)
@@ -132,13 +134,13 @@ func GetAllJobs(mode string) {
 			fmt.Print(err)
 			return
 		}
-		var v classType.JobList
+		var v classType1.JobList
 		jsonParse.JsonUnmarsha(body, &v)
 		fmt.Println(v.APIVersion)
 		fmt.Println(v.SelfLink)
 		fmt.Println(v.ResourceVersion)
 		for _, item := range v.Items {
-			classType.PrintJob(item)
+			classType1.PrintJob(item)
 		}
 	}
 }
@@ -158,16 +160,16 @@ func GetJobOfNamespace(namespace string, mode string) {
 			fmt.Print(err)
 			return
 		}
-		var v classType.JobList
+		var v classType1.JobList
 		jsonParse.JsonUnmarsha(body, &v)
 		for _, item := range v.Items {
-			classType.PrintJob(item)
+			classType1.PrintJob(item)
 		}
 	}
 }
 func JobExist(namespace string, name string, mode string) bool {
 	var resp *http.Response
-	var v classType.Job
+	var v classType1.Job
 	str := GenerateJobNameUrl(namespace, name)
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + str)
@@ -193,9 +195,9 @@ func JobExist(namespace string, name string, mode string) bool {
 	return false
 }
 
-func GetJobByNameAndNamespace(namespace string, name string, mode string) classType.Job {
+func GetJobByNameAndNamespace(namespace string, name string, mode string) classType1.Job {
 	var resp *http.Response
-	var v classType.Job
+	var v classType1.Job
 	str := GenerateJobNameUrl(namespace, name)
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + str)
@@ -216,9 +218,9 @@ func GetJobByNameAndNamespace(namespace string, name string, mode string) classT
 	}
 	return v
 }
-func GetAllService(mode string) []classType.Service {
-	var v classType.ServiceList
-	var serviceList []classType.Service
+func GetAllService(mode string) []classType1.Service {
+	var v classType1.ServiceList
+	var serviceList []classType1.Service
 	var resp *http.Response
 	if mode == Test {
 		resp = InvokeGetReuqest(destinationServer_Test + ReadAllService_GET)
@@ -236,7 +238,7 @@ func GetAllService(mode string) []classType.Service {
 
 		jsonParse.JsonUnmarsha(body, &v)
 		for _, item := range v.Items {
-			classType.PrintService(item)
+			classType1.PrintService(item)
 		}
 		serviceList = v.Items
 		return serviceList
@@ -259,15 +261,15 @@ func GetServicesOfNamespace(namespace string, mode string) {
 			fmt.Print(err)
 			return
 		}
-		var v classType.ServiceList
+		var v classType1.ServiceList
 		jsonParse.JsonUnmarsha(body, &v)
 		for _, item := range v.Items {
-			classType.PrintService(item)
+			classType1.PrintService(item)
 		}
 	}
 }
-func GetServicesOfNamespaceAndName(namespace string, name string, mode string) classType.Service {
-	var v classType.Service
+func GetServicesOfNamespaceAndName(namespace string, name string, mode string) classType1.Service {
+	var v classType1.Service
 	var resp *http.Response
 	str := GenerateServiceListNameUrl(namespace, name)
 	if mode == Test {
@@ -289,9 +291,8 @@ func GetServicesOfNamespaceAndName(namespace string, name string, mode string) c
 	return v
 }
 
-func GetPodsOfNamespace(namespace string, mode string) []classType.Pod {
-	var v classType.PodList
-	var pod []classType.Pod
+func GetPodsOfNamespace(namespace string, mode string) []*interf.Podinface {
+	var v = getPodListtypeByMode(mode)
 	var resp *http.Response
 	str := GeneratePodNamespaceUrl(namespace)
 	if mode == Test {
@@ -299,26 +300,28 @@ func GetPodsOfNamespace(namespace string, mode string) []classType.Pod {
 	} else {
 		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
 	}
+	pl := jsonParse.JsonUnmarshaPodList(resp, &v)
+	return interf.GetItems(*pl)
 
-	if (resp != nil) {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if (err != nil) {
-			fmt.Print(err)
-			return pod
-		}
-		jsonParse.JsonUnmarsha(body, &v)
-		pod = v.Items
-		return pod
-		//for _, item := range v.Items {
-		//	classType.PrintPod(item)
-		//}
-	}
-	return pod
+	//if (resp != nil) {
+	//	defer resp.Body.Close()
+	//	body, err := ioutil.ReadAll(resp.Body)
+	//	if (err != nil) {
+	//		fmt.Print(err)
+	//		return pod
+	//	}
+	//	jsonParse.JsonUnmarsha(body, &v)
+	//	pod = v.Items
+	//	return pod
+	//	//for _, item := range v.Items {
+	//	//	classType.PrintPod(item)
+	//	//}
+	//}
 }
 
-func GetPodByNameAndNamespace(namespace string, name string, mode string) classType.Pod {
-	var v classType.Pod
+func GetPodByNameAndNamespace(namespace string, name string, mode string) *interf.Podinface {
+
+	v := getPodtypeByMode(mode)
 	str := GeneratePodNameUrl(namespace, name)
 
 	var resp *http.Response
@@ -328,22 +331,24 @@ func GetPodByNameAndNamespace(namespace string, name string, mode string) classT
 		resp = InvokeRequest_Caicloud("GET", destinationServer_Caicloud + str, nil)
 	}
 
-	if (resp != nil) {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if (err != nil) {
-			fmt.Print(err)
-			return v
-		}
-		jsonParse.JsonUnmarsha(body, &v)
-		//classType.PrintPod(v)
-		return v
-	}
-	return v
+	return jsonParse.JsonUnmarshaPod(resp, &v)
+
+	//if (resp != nil) {
+	//	defer resp.Body.Close()
+	//	body, err := ioutil.ReadAll(resp.Body)
+	//	if (err != nil) {
+	//		fmt.Print(err)
+	//		return v
+	//	}
+	//	jsonParse.JsonUnmarsha(body, &v)
+	//	//classType.PrintPod(v)
+	//	return v
+	//}
+	//return v
 }
 
-func GetNodeByName(name string, mode string) (classType.Node, string) {
-	var v classType.Node
+func GetNodeByName(name string, mode string) (classType1.Node, string) {
+	var v classType1.Node
 	var str2 string
 	str := GenerateNodeNameUrl(name)
 
@@ -362,7 +367,7 @@ func GetNodeByName(name string, mode string) (classType.Node, string) {
 			return v, str2
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		str2 = classType.PrintNodeResourceStatus(v)
+		str2 = classType1.PrintNodeResourceStatus(v)
 		return v, str2
 	}
 	return v, str2
@@ -412,17 +417,19 @@ func DeleteUrl_test(url string, byte []byte) {
 	ioutil.ReadAll(resp.Body)
 }
 
-func CreatePod(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) classType.Pod {
-	var resource classType.ResourceRequirements
-	resource.Limits = make(map[classType.ResourceName]string)
-	resource.Limits["cpu"] = cpu_max
-	resource.Limits["memory"] = mem_max
-	resource.Requests = make(map[classType.ResourceName]string)
-	resource.Requests["cpu"] = cpu_min
-	resource.Requests["memory"] = mem_min
-	byte := GeneratePodBody(namespace, image, name, resource, command)
+func CreatePod(namespace string, image string, name string, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) *interf.Podinface {
+
+	//var v = getResourceByMode(mode)
+	//interf.SetResource(v, cpu_min, cpu_max, mem_min, mem_max)
+	//var resource classType1.ResourceRequirements
+	//resource.Limits = make(map[classType1.ResourceName]string)
+	//resource.Limits["cpu"] = cpu_max
+	//resource.Limits["memory"] = mem_max
+	//resource.Requests = make(map[classType1.ResourceName]string)
+	//resource.Requests["cpu"] = cpu_min
+	//resource.Requests["memory"] = mem_min
+	byte := GeneratePodBody(namespace, image, name, cpu_max, mem_max, command, mode)
 	var resp *http.Response
-	var v classType.Pod
 	var url string
 	if mode == Test {
 		url = destinationServer_Test + GeneratePodNamespaceUrl(namespace)
@@ -431,25 +438,27 @@ func CreatePod(namespace string, image string, name string, cpu_min string, cpu_
 		url = destinationServer_Caicloud + GeneratePodNamespaceUrl(namespace)
 		resp = InvokeRequest_Caicloud("POST", url, byte)
 	}
-	if (resp != nil) {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if (err != nil) {
-			fmt.Print(err)
-			return v
-		}
-		jsonParse.JsonUnmarsha(body, &v)
-		return v
-	}
-	return v
+	var v2 = getPodtypeByMode(mode)
+	return jsonParse.JsonUnmarshaPod(resp, &v2)
+	//if (resp != nil) {
+	//	defer resp.Body.Close()
+	//	body, err := ioutil.ReadAll(resp.Body)
+	//	if (err != nil) {
+	//		fmt.Print(err)
+	//		return v
+	//	}
+	//	jsonParse.JsonUnmarsha(body, &v)
+	//	return v
+	//}
+	//return v
 
 }
 func CreateJob(namespace string, image string, name string, completion int32, cpu_min string, cpu_max string, mem_min string, mem_max string, command string, mode string) {
-	var resource classType.ResourceRequirements
-	resource.Limits = make(map[classType.ResourceName]string)
+	var resource classType1.ResourceRequirements
+	resource.Limits = make(map[classType1.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
 	resource.Limits["memory"] = mem_max
-	resource.Requests = make(map[classType.ResourceName]string)
+	resource.Requests = make(map[classType1.ResourceName]string)
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
 	byte := GenerateJobBody(namespace, name, image, completion, command, resource, true)
@@ -464,7 +473,7 @@ func CreateJob(namespace string, image string, name string, completion int32, cp
 }
 
 func CreateJobWithoutResource(namespace string, image string, name string, completion int32, command string, mode string) {
-	var resource classType.ResourceRequirements
+	var resource classType1.ResourceRequirements
 	byte := GenerateJobBody(namespace, name, image, completion, command, resource, false)
 	var url string
 	if mode == Test {
@@ -491,16 +500,16 @@ func CreateService(name string, label_name string, namespace string, port int32,
 }
 
 func CreateReplicationController(namespace string, image string, name string, podName string, labelName string, replic int32, cpu_min string, cpu_max string, mem_min string, mem_max string, ports map[int32]int32, mode string) {
-	var resource classType.ResourceRequirements
-	resource.Limits = make(map[classType.ResourceName]string)
+	var resource classType1.ResourceRequirements
+	resource.Limits = make(map[classType1.ResourceName]string)
 	resource.Limits["cpu"] = cpu_max
 	resource.Limits["memory"] = mem_max
-	resource.Requests = make(map[classType.ResourceName]string)
+	resource.Requests = make(map[classType1.ResourceName]string)
 	resource.Requests["cpu"] = cpu_min
 	resource.Requests["memory"] = mem_min
-	var Ports []classType.ContainerPort
+	var Ports []classType1.ContainerPort
 	for key, value := range ports {
-		var port classType.ContainerPort
+		var port classType1.ContainerPort
 		port.ContainerPort = key
 		port.HostPort = value
 		Ports = append(Ports, port)
@@ -564,18 +573,18 @@ func DeleteReplicationController(namespace string, name string, mode string) {
 	}
 
 }
-func GenerateJobBody(namespace string, name string, image string, completion int32, command string, resource classType.ResourceRequirements, whetherResource bool) []byte {
-	var typeMeta classType.TypeMeta
+func GenerateJobBody(namespace string, name string, image string, completion int32, command string, resource classType1.ResourceRequirements, whetherResource bool) []byte {
+	var typeMeta classType1.TypeMeta
 	typeMeta.APIVersion = "batch/v1"
 	typeMeta.Kind = "Job"
-	var objectMeta classType.ObjectMeta
+	var objectMeta classType1.ObjectMeta
 	objectMeta.Name = name
 	objectMeta.Namespace = namespace
 
-	var jobSpec classType.JobSpec
+	var jobSpec classType1.JobSpec
 	jobSpec.Completions = &completion
 	jobSpec.Template.Name = name
-	var container classType.Container
+	var container classType1.Container
 	container.Name = name
 	container.Image = image
 	if whetherResource == true {
@@ -583,13 +592,13 @@ func GenerateJobBody(namespace string, name string, image string, completion int
 	}
 
 	container.Command = strings.Split(command, " ")
-	var containers [1]classType.Container
+	var containers [1]classType1.Container
 	containers[0] = container
 
 	jobSpec.Template.Name = name
-	slice := []classType.Container{container}
+	slice := []classType1.Container{container}
 	jobSpec.Template.Spec.Containers = slice
-	var job classType.Job
+	var job classType1.Job
 	job.TypeMeta = typeMeta
 	job.ObjectMeta = objectMeta
 	job.Spec = jobSpec
@@ -602,33 +611,37 @@ func GenerateJobBody(namespace string, name string, image string, completion int
 
 }
 
-func GeneratePodBody(namespace string, image string, name string, resource classType.ResourceRequirements, command string) []byte {
-	//生成typeMedata
-	var typeMedata classType.TypeMeta
-	typeMedata.APIVersion = "v1"
-	typeMedata.Kind = "Pod"
+func GeneratePodBody(namespace string, image string, name string, cpu string, mem string, command string, mode string) []byte {
+	var pod = getPodtypeByMode(mode)
+	b := interf.SetPod(pod, "v1", "Pod", name, namespace, image, cpu, mem, command)
+	//interf.SetTypeMeta(&pod, "v1", "Pod")
+	//interf.SetObjectMeta(&pod, name, namespace, name)
+	//interf.SetContainer(&pod, name, image, cpu, mem, command, "Always")
+	//var typeMedata classType1.TypeMeta
+	//typeMedata.APIVersion = "v1"
+	//typeMedata.Kind = "Pod"
 	//生成objectMedata
-	var objectMedata classType.ObjectMeta
-	objectMedata.Labels = make(map[string]string)
-	objectMedata.Labels["name"] = name
-	objectMedata.Namespace = namespace
-	objectMedata.Name = name
+	//var objectMedata classType1.ObjectMeta
+	//objectMedata.Labels = make(map[string]string)
+	//objectMedata.Labels["name"] = name
+	//objectMedata.Namespace = namespace
+	//objectMedata.Name = name
 	//生成spec.container
-	var container classType.Container
-	container.Name = name
-	container.Image = image
-	container.Resources = resource
-	container.Command = strings.Split(command, " ")
-	var containers [1]classType.Container
-	containers[0] = container
-	var pod classType.Pod
-	pod.TypeMeta = typeMedata
-	pod.ObjectMeta = objectMedata
-	//将container拷到pod.spec.containers
-	slice := []classType.Container{container}
-	pod.Spec.Containers = slice
-	pod.Spec.RestartPolicy = "Always"
-	b := jsonParse.JsonMarsha(pod)
+	//var container classType1.Container
+	//container.Name = name
+	//container.Image = image
+	//container.Resources = *resource
+	//container.Command = strings.Split(command, " ")
+	//var containers [1]classType1.Container
+	//containers[0] = container
+	////
+	////pod.TypeMeta = typeMedata
+	////pod.ObjectMeta = objectMedata
+	////将container拷到pod.spec.containers
+	//slice := []classType1.Container{container}
+	//pod.Spec.Containers = slice
+	//pod.Spec.RestartPolicy = "Always"
+	//b := jsonParse.JsonMarsha(pod)
 	//fmt.Print(string(b))
 	return b
 
@@ -636,28 +649,28 @@ func GeneratePodBody(namespace string, image string, name string, resource class
 
 func GenerateServiceBody(name string, labelName string, namespace string, port int32, nodePort int32) []byte {
 	//生成typeMedata
-	var typeMedata classType.TypeMeta
+	var typeMedata classType1.TypeMeta
 	typeMedata.APIVersion = "v1"
 	typeMedata.Kind = "Service"
 
 	//生成objectMedata
-	var objectMedata classType.ObjectMeta
+	var objectMedata classType1.ObjectMeta
 	objectMedata.Labels = make(map[string]string)
 	objectMedata.Labels["name"] = name
 	objectMedata.Namespace = namespace
 	objectMedata.Name = name
 
 	//生成Service spec
-	var servicePort classType.ServicePort
+	var servicePort classType1.ServicePort
 	servicePort.Port = port
 	servicePort.NodePort = nodePort
-	slice := []classType.ServicePort{servicePort}
-	var serviceSpec classType.ServiceSpec
+	slice := []classType1.ServicePort{servicePort}
+	var serviceSpec classType1.ServiceSpec
 	serviceSpec.Selector = make(map[string]string)
 	serviceSpec.Selector["name"] = labelName
 	serviceSpec.Ports = slice
-	serviceSpec.Type = classType.ServiceTypeNodePort
-	var service classType.Service
+	serviceSpec.Type = classType1.ServiceTypeNodePort
+	var service classType1.Service
 	service.ObjectMeta = objectMedata
 	service.TypeMeta = typeMedata
 	service.Spec = serviceSpec
@@ -666,46 +679,46 @@ func GenerateServiceBody(name string, labelName string, namespace string, port i
 	return b
 }
 
-func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32, resource classType.ResourceRequirements, ports []classType.ContainerPort) []byte {
+func GenerateReplicationcontrollerBody(namespace string, image string, name string, podName string, labelName string, replic int32, resource classType1.ResourceRequirements, ports []classType1.ContainerPort) []byte {
 	//生成typeMedata
-	var typeMedata classType.TypeMeta
+	var typeMedata classType1.TypeMeta
 	typeMedata.APIVersion = "v1"
 	typeMedata.Kind = "ReplicationController"
 	//生成objectMedata
-	var objectMedata classType.ObjectMeta
+	var objectMedata classType1.ObjectMeta
 	objectMedata.Labels = make(map[string]string)
 	objectMedata.Labels["name"] = labelName
 	objectMedata.Namespace = namespace
 	objectMedata.Name = name
 
 	//生成PodObjectMedata
-	var objectMedata2 classType.ObjectMeta
+	var objectMedata2 classType1.ObjectMeta
 	objectMedata2.Labels = make(map[string]string)
 	objectMedata2.Labels["name"] = labelName
 	objectMedata2.Namespace = namespace
 	objectMedata2.Name = podName
 
 	//生成PodTemplateSpec.container
-	var container classType.Container
+	var container classType1.Container
 	container.Name = name
 	container.Image = image
 	container.Resources = resource
 	container.Ports = ports
-	var containers [1]classType.Container
+	var containers [1]classType1.Container
 	containers[0] = container
-	slice := []classType.Container{container}
-	var podTemplateSpec classType.PodTemplateSpec
+	slice := []classType1.Container{container}
+	var podTemplateSpec classType1.PodTemplateSpec
 	podTemplateSpec.ObjectMeta = objectMedata2
 	podTemplateSpec.Spec.Containers = slice
 
-	var replicationControllerSpec classType.ReplicationControllerSpec
+	var replicationControllerSpec classType1.ReplicationControllerSpec
 	replicationControllerSpec.Template = &podTemplateSpec
 
 	replicationControllerSpec.Replicas = &replic
 	replicationControllerSpec.Selector = make(map[string]string)
 	replicationControllerSpec.Selector["name"] = labelName
 
-	var replicationController classType.ReplicationController
+	var replicationController classType1.ReplicationController
 	replicationController.Spec = replicationControllerSpec
 	replicationController.ObjectMeta = objectMedata
 	replicationController.TypeMeta = typeMedata
@@ -715,27 +728,78 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	return b
 
 }
-func PodComplete(pod classType.Pod) bool {
+func PodComplete(pod interf.Podinface) bool {
 	//fmt.Println("pod寻找结果：", len(pod.Name) == 0)
-	if len(pod.Status.ContainerStatuses) != 0 {
+	if pod.GetContainerStatusesLen() != 0 {
 		//fmt.Println("ready:", pod.Status.ContainerStatuses[0].Ready)
 		//fmt.Println("status:", pod.Status.Phase)
 		//fmt.Println("结果:", len(pod.Name) == 0 || (pod.Status.ContainerStatuses[0].Ready == false && pod.Status.Phase == "Running"))
-		return len(pod.Name) == 0 || (pod.Status.ContainerStatuses[0].Ready == false && pod.Status.Phase == "Running")
+		return len(pod.GetName()) == 0 || (pod.GetReady() == false && pod.GetStautsPhase() == "Running")
 	}
-	return len(pod.Name) == 0
+	return len(pod.GetName()) == 0
 }
-func JobComplete(job classType.Job) bool {
+func JobComplete(job classType1.Job) bool {
 	return *job.Spec.Completions == job.Status.Succeeded
 }
 
-func FindPodByLabelName(name string, pods *[]classType.Pod) (string, string) {
-	for _, pod := range *pods {
-		if pod.Labels["name"] == name {
-			return pod.Namespace, pod.Name
+func FindPodByLabelName(name string, pods []*interf.Podinface) (string, string) {
+	for _, pod := range pods {
+		if (*pod).GetLabel(name) == name {
+			return (*pod).GetNamespace(), (*pod).GetName()
 		}
 	}
 	return " ", " "
+}
+func getPodtypeByMode(mode string) interf.Podinface {
+
+	var v1 classType1.Pod
+	var v2 classType2.Pod
+	if mode == Caicloud {
+		return v1
+	} else {
+		return v2
+	}
+	return v2
+}
+func getPodListtypeByMode(mode string) interf.PodListinface {
+	var v1 classType1.PodList
+	var v2 classType2.PodList
+	if mode == Caicloud {
+		return v1
+	} else {
+		return v2
+	}
+	return v2
+}
+func getResourceByMode(mode string) interf.Resourceinface {
+	var v1 classType1.ResourceRequirements
+	var v2 classType2.ResourceRequirements
+	if mode == Caicloud {
+		return v1
+	} else {
+		return v2
+	}
+	return v2
+}
+func getTypemetaByMode(mode string) interf.TypeMetainface {
+	var v1 classType1.TypeMeta
+	var v2 classType2.TypeMeta
+	if mode == Caicloud {
+		return v1
+	} else {
+		return v2
+	}
+	return v2
+}
+func getObjectmetaByMode(mode string) interf.ObjectMetainface {
+	var v1 classType1.ObjectMeta
+	var v2 classType2.ObjectMeta
+	if mode == Caicloud {
+		return v1
+	} else {
+		return v2
+	}
+	return v2
 }
 
 

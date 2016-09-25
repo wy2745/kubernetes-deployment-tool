@@ -24,8 +24,10 @@ const (
 	shortTermWorkCompletion int32 = 1000
 	cpu_Use = 400
 	mem_Use = 10
-	standardCpu_use = 400
-	standardMem_use = 200
+	cpuUpbound = 5
+	memUpbound = 5
+	standardCpu_use = 100
+	standardMem_use = 150
 	longTermName = "ntest"
 	longTermService = "nservice"
 )
@@ -45,6 +47,8 @@ type WorkloadController struct {
 	ShortTerm *WorkLoad
 	Monitor   *channel
 	Worker    *channel
+	Unit      int
+	AddRate   float64
 	Num       int
 	Name      []string
 	NodeName  []string
@@ -754,6 +758,23 @@ func NewWorkLoadController(TotalCpu int, TotalMem int, ShortCpuRate float32, Sho
 
 	return &s
 }
+func NewWorkLoadControllerV2(TotalCpu int, TotalMem int, ShortCpuRate float32, ShortMemRate float32, Unit int, Rate float64) *WorkloadController {
+	shortCpu_int := int(float32(TotalCpu) * ShortCpuRate)
+	shortMem_int := int(float32(TotalMem) * ShortMemRate)
+	shortCpu := strconv.Itoa(shortCpu_int)
+	shortMem := strconv.Itoa(shortMem_int)
+	longCpu := strconv.Itoa(TotalCpu - shortCpu_int)
+	longMem := strconv.Itoa(TotalMem - shortMem_int)
+	s := WorkloadController{
+		Total : NewWorkLoad(strconv.Itoa(TotalCpu) + cpu, strconv.Itoa(TotalMem) + mem_M, TotalCpu, TotalMem),
+		LongTerm:NewWorkLoad(longCpu + cpu, longMem + mem_M, TotalCpu - shortCpu_int, TotalMem - shortMem_int),
+		ShortTerm:NewWorkLoad(shortCpu + cpu, shortMem + mem_M, shortCpu_int, shortMem_int),
+		Unit: Unit,
+		AddRate: Rate,
+	}
+
+	return &s
+}
 
 func WorkLoadDisplay(wl *WorkloadController) {
 	if wl == nil {
@@ -769,7 +790,8 @@ func ScheduleTest(scanner *bufio.Scanner, mode string) *WorkloadController {
 	fmt.Print("^_^\n")
 	fmt.Print("请输入总负载信息\n")
 	fmt.Print("总负载Cpu(单位:m 整数):")
-	var TotalCpu, TotalMem int
+	var TotalCpu, TotalMem, cpuUnit int
+	var CpuAddRate float64
 	var err error
 	var line string
 	var WL *WorkloadController
@@ -792,7 +814,26 @@ func ScheduleTest(scanner *bufio.Scanner, mode string) *WorkloadController {
 		line = scanner.Text()
 		TotalMem, err = strconv.Atoi(line)
 	}
-	WL = NewWorkLoadController(TotalCpu, TotalMem, float32(1), float32(1))
+	fmt.Print("\n负载颗粒度(单位:m 整数 >=100):")
+	scanner.Scan()
+	line = scanner.Text()
+	for cpuUnit, err = strconv.Atoi(line); err != nil || (cpuUnit < 100); err = nil {
+		fmt.Print("必须输入>=100的整数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		cpuUnit, err = strconv.Atoi(line)
+	}
+	fmt.Print("\n预留负载比例(小数):")
+	scanner.Scan()
+	line = scanner.Text()
+	for CpuAddRate, err = strconv.ParseFloat(line, 32); err != nil || CpuAddRate > 1; err = nil {
+		fmt.Print("必须输入小于等于1的小数\n")
+		scanner.Scan()
+		line = scanner.Text()
+		CpuAddRate, err = strconv.ParseFloat(line, 32)
+	}
+
+	WL = NewWorkLoadControllerV2(TotalCpu, TotalMem, float32(1), float32(1), cpuUnit, CpuAddRate)
 	WorkLoadDisplay(WL)
 
 	fmt.Println("部署连续任务")
@@ -830,7 +871,8 @@ func (Wl *WorkloadController) UploadWorkLoad(mode string) {
 	if Wl == nil {
 		return
 	}
-	allocMap := allocLoad(Wl.ShortTerm.cpuWorkLoad_int, Wl.ShortTerm.memWorkLoad_int)
+	//allocMap := allocLoad(Wl.ShortTerm.cpuWorkLoad_int, Wl.ShortTerm.memWorkLoad_int)
+	allocMap := allocLoadRandom(Wl.ShortTerm.cpuWorkLoad_int, Wl.ShortTerm.memWorkLoad_int, Wl.Unit, Wl.AddRate)
 	count := 0
 	for key, value := range allocMap {
 		for key2, value2 := range value {
@@ -838,7 +880,7 @@ func (Wl *WorkloadController) UploadWorkLoad(mode string) {
 				podName := "test" + strconv.Itoa(count)
 				Wl.Name = append(Wl.Name, podName)
 				Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(key) + cpu, strconv.Itoa(key) + cpu, strconv.Itoa(key2) + mem_M, strconv.Itoa(key2) + mem_M, "./home/wsc 100 1000", mode)
-				//time.Sleep(time.Second * 2)
+				time.Sleep(time.Second * 2)
 				count++
 			}
 		}
@@ -900,6 +942,42 @@ func (Wl *WorkloadController) EndWorkLoad(mode string) *WorkloadController {
 	}
 	fmt.Println("workLoad 删除完毕")
 	return nil
+}
+
+func allocLoadRandom(totalCpu int, totalMem int, unit int, rate float64) map[int](map[int]int) {
+	var result map[int](map[int]int) = make(map[int](map[int]int))
+	var cpuUse = 0
+	var memUse = 0
+	for {
+		s1 := rand.NewSource(time.Now().UnixNano())
+		r1 := rand.New(s1)
+		ran1 := (r1.Intn(cpuUpbound) + 1) * unit
+		ran1 = int(float64(ran1) * (float64(1) + rate))
+		s1 = rand.NewSource(time.Now().UnixNano())
+		r1 = rand.New(s1)
+		ran2 := (r1.Intn(memUpbound) + 1) * unit
+		ran2 = int(float64(ran2) * (float64(1) + rate))
+		var ok bool
+		_, ok = result[ran1]
+		if ok == false {
+			result2 := make(map[int]int)
+			result2[ran2] = 1
+			result[ran1] = result2
+		} else {
+			_, ok = result[ran1][ran2]
+			if ok == false {
+				result[ran1][ran2] = 1
+			} else {
+				result[ran1][ran2] += 1
+			}
+		}
+		cpuUse += ran1
+		memUse += ran2
+		if cpuUse >= totalCpu && memUse >= totalMem {
+			return result
+		}
+	}
+
 }
 
 func allocLoad(totalCpu int, totalMem int) map[int](map[int]int) {

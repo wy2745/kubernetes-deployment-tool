@@ -5,6 +5,7 @@ const (
 	password string = "FlbY3CD6mcFUfZvb"
 
 	destinationServer_Test string = "http://202.120.40.177:16380"
+	KubemarkServer_Test string = "http://202.120.40.177:17080"
 	destinationServer_Caicloud string = "https://sjtu.caicloudapp.com"
 	GetNodeList_GET string = "/api/v1/nodes"   //list or watch objects of kind Node
 	CreateNode_POST string = "/api/v1/nodes"    //create a Node
@@ -55,7 +56,13 @@ func GenerateServiceListNameUrl(namespace string, name string) string {
 func GenerateReplicationControllerNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers"
 }
+func GenerateReplicationControllerNameUrl(namespace string, name string) string {
+	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers" + "/" + name
+}
 func GenerateNodeNameUrl(name string) string {
 	return CreateNode_POST + "/" + name
+}
+func GenerateNodeUrl() string {
+	return CreateNode_POST
 }
 

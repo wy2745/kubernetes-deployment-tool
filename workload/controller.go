@@ -834,9 +834,44 @@ func ScheduleTest(scanner *bufio.Scanner, mode string) *WorkloadController {
 	}
 
 	WL = NewWorkLoadControllerV2(TotalCpu, TotalMem, float32(1), float32(1), cpuUnit, CpuAddRate)
-	WorkLoadDisplay(WL)
+	allocMap := allocLoadRandomV2()
 
+	WL.UploadWorkLoadV2(mode, 0, allocMap)
 	fmt.Println("部署连续任务")
+	fmt.Println("搞定")
+	scanner.Scan()
+	line = scanner.Text()
+
+	log(WL, mode)
+	if WL != nil {
+		WL = WL.EndWorkLoad(mode)
+	}
+
+	WL = NewWorkLoadControllerV2(TotalCpu, TotalMem, float32(1), float32(1), cpuUnit, CpuAddRate)
+
+	WL.UploadWorkLoadV2(mode, 1, allocMap)
+	fmt.Println("部署连续任务")
+	fmt.Println("搞定")
+	scanner.Scan()
+	line = scanner.Text()
+
+	log(WL, mode)
+	if WL != nil {
+		WL = WL.EndWorkLoad(mode)
+	}
+
+	WL = NewWorkLoadControllerV2(TotalCpu, TotalMem, float32(1), float32(1), cpuUnit, CpuAddRate)
+
+	WL.UploadWorkLoadV2(mode, 2, allocMap)
+	fmt.Println("部署连续任务")
+	fmt.Println("搞定")
+	scanner.Scan()
+	line = scanner.Text()
+
+	log(WL, mode)
+	if WL != nil {
+		WL = WL.EndWorkLoad(mode)
+	}
 
 	//cpuBound := WL.ShortTerm.cpuWorkLoad_int / standardCpu_use
 	//memBound := WL.ShortTerm.memWorkLoad_int / standardMem_use
@@ -850,12 +885,17 @@ func ScheduleTest(scanner *bufio.Scanner, mode string) *WorkloadController {
 	//
 	//fmt.Println("size: ", boundNum)
 	//WL.Num = boundNum
-	WL.UploadWorkLoad(mode)
-	fmt.Println("搞定")
-	scanner.Scan()
-	line = scanner.Text()
 
-	log(WL, mode)
+
+	//WL.UploadWorkLoad(mode)
+	//fmt.Println("搞定")
+	//scanner.Scan()
+	//line = scanner.Text()
+	//
+	//log(WL, mode)
+	//if WL != nil {
+	//	WL = WL.EndWorkLoad(mode)
+	//}
 	return WL
 }
 func contain(nodeNames *[]string, nodeName string) bool {
@@ -880,6 +920,45 @@ func (Wl *WorkloadController) UploadWorkLoad(mode string) {
 				podName := "test" + strconv.Itoa(count)
 				Wl.Name = append(Wl.Name, podName)
 				Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(key) + cpu, strconv.Itoa(key) + cpu, strconv.Itoa(key2) + mem_M, strconv.Itoa(key2) + mem_M, "./home/wsc 100 1000", mode)
+				time.Sleep(time.Second * 2)
+				count++
+			}
+		}
+	}
+	Wl.Num = count
+
+	//for index := 0; index < Wl.Num; index++ {
+	//	podName := "test" + strconv.Itoa(index)
+	//	Wl.Name = append(Wl.Name, podName)
+	//	Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardCpu_use) + cpu, strconv.Itoa(standardMem_use) + mem_M, strconv.Itoa(standardMem_use) + mem_M, "./home/wsc 100 1000", mode)
+	//	time.Sleep(time.Second * 2)
+	//}
+}
+func (Wl *WorkloadController) UploadWorkLoadV2(mode string, m int, allocmap map[int]map[int]int) {
+	if Wl == nil {
+		return
+	}
+	var unit int = 0
+	var rate float64 = float64(0)
+	switch m {
+	case 0:
+		unit = 100
+	case 1:
+		unit = Wl.Unit
+	case 2:
+		unit = 100
+		rate = Wl.AddRate
+	}
+	//allocMap := allocLoad(Wl.ShortTerm.cpuWorkLoad_int, Wl.ShortTerm.memWorkLoad_int)
+	count := 0
+	for key, value := range allocmap {
+		for key2, value2 := range value {
+			for i := 0; i < value2; i++ {
+				podName := "test" + strconv.Itoa(count)
+				Wl.Name = append(Wl.Name, podName)
+				t1 := int(float64(key * unit) * (float64(1) + rate))
+				t2 := int(float64(key2 * unit) * (float64(1) + rate))
+				Request.CreatePod("default", short_cpu_bound, podName, strconv.Itoa(t1) + cpu, strconv.Itoa(t1) + cpu, strconv.Itoa(t2) + mem_M, strconv.Itoa(t2) + mem_M, "./home/wsc 100 1000", mode)
 				time.Sleep(time.Second * 2)
 				count++
 			}
@@ -944,7 +1023,35 @@ func (Wl *WorkloadController) EndWorkLoad(mode string) *WorkloadController {
 	return nil
 }
 
-func allocLoadRandom(totalCpu int, totalMem int, unit int, rate float64) map[int](map[int]int) {
+func allocLoadRandomV2() (map[int](map[int]int)) {
+	var result map[int](map[int]int) = make(map[int](map[int]int))
+	for i := 0; i < 20; i++ {
+		s1 := rand.NewSource(time.Now().UnixNano())
+		r1 := rand.New(s1)
+		ran1 := (r1.Intn(cpuUpbound) + 1)
+		s1 = rand.NewSource(time.Now().UnixNano())
+		r1 = rand.New(s1)
+		ran2 := (r1.Intn(memUpbound) + 1)
+		var ok bool
+		_, ok = result[ran1]
+		if ok == false {
+			result2 := make(map[int]int)
+			result2[ran2] = 1
+			result[ran1] = result2
+		} else {
+			_, ok = result[ran1][ran2]
+			if ok == false {
+				result[ran1][ran2] = 1
+			} else {
+				result[ran1][ran2] += 1
+			}
+		}
+	}
+	return result
+
+}
+
+func allocLoadRandom(totalCpu int, totalMem int, unit int, rate float64) (map[int](map[int]int)) {
 	var result map[int](map[int]int) = make(map[int](map[int]int))
 	var cpuUse = 0
 	var memUse = 0

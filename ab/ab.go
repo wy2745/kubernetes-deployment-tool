@@ -7,16 +7,16 @@ import (
 
 const (
 	root string = "/Users/panda/Desktop"
-	node string = "http://120.26.120.30"
-	port string = "30888"
-	getfile string = "index.html"
-	desroot string = "/Users/panda/Desktop/result.cs"
+	node string = "http://202.120.40.177"
+	port string = "17080"
+	getfile string = "api/v1/pods"
+	desroot string = "/Users/panda/Desktop/"
 	tmpurl string = node + ":" + port + "/" + getfile
 )
 
-func Abtest() {
+func Abtest(name string) {
 	var err error
-	str := "ab -n 10 -c 10 -e " + desroot + " " + tmpurl
+	str := "ab -n 10 -c 10 -e " + desroot + "record" + name + ".csv" + " " + tmpurl
 	fmt.Println(str)
 	cmd := exec.Command("/bin/sh", "-c", str)
 	_, err = cmd.Output()

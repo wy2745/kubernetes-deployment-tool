@@ -728,6 +728,53 @@ func GenerateReplicationcontrollerBody(namespace string, image string, name stri
 	return b
 
 }
+func GenerateReplicationcontrollerBodyV2(namespace string, image string, name string, replic int32, command []string) []byte {
+	//生成typeMedata
+	var typeMedata classType1.TypeMeta
+	typeMedata.APIVersion = "v1"
+	typeMedata.Kind = "ReplicationController"
+	//生成objectMedata
+	var objectMedata classType1.ObjectMeta
+	objectMedata.Labels = make(map[string]string)
+	objectMedata.Labels["name"] = name
+	objectMedata.Namespace = namespace
+	objectMedata.Name = name
+
+	//生成PodObjectMedata
+	var objectMedata2 classType1.ObjectMeta
+	objectMedata2.Labels = make(map[string]string)
+	objectMedata2.Labels["name"] = name
+	objectMedata2.Namespace = namespace
+
+	//生成PodTemplateSpec.container
+	var container classType1.Container
+	container.Name = name
+	container.Image = image
+	container.Command = command
+	var containers [1]classType1.Container
+	containers[0] = container
+	slice := []classType1.Container{container}
+	var podTemplateSpec classType1.PodTemplateSpec
+	podTemplateSpec.ObjectMeta = objectMedata2
+	podTemplateSpec.Spec.Containers = slice
+
+	var replicationControllerSpec classType1.ReplicationControllerSpec
+	replicationControllerSpec.Template = &podTemplateSpec
+
+	replicationControllerSpec.Replicas = &replic
+	replicationControllerSpec.Selector = make(map[string]string)
+	replicationControllerSpec.Selector["name"] = name
+
+	var replicationController classType1.ReplicationController
+	replicationController.Spec = replicationControllerSpec
+	replicationController.ObjectMeta = objectMedata
+	replicationController.TypeMeta = typeMedata
+
+	b := jsonParse.JsonMarsha(replicationController)
+	//fmt.Print(string(b))
+	return b
+
+}
 func PodComplete(pod interf.Podinface) bool {
 	//fmt.Println("pod寻找结果：", len(pod.Name) == 0)
 	if pod.GetContainerStatusesLen() != 0 {

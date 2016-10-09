@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
-	//"./ab"
-	WorkLoadController "./workload"
+	"./ab"
+	//WorkLoadController "./workload"
 	//"./request"
 	//"./locust"
+	//"./kubemark"
+	//"bufio"
+	//"os"
 )
 
 func main() {
@@ -19,7 +22,7 @@ func main() {
 	//Request.GenerateServiceBody("mysql-service", "mysql----test", "default", 3302)
 	//WorkLoadController.MissionRecorder()
 	//WorkLoadController.Start()
-	WorkLoadController.StartPodVersion()
+	//WorkLoadController.StartPodVersion()
 	//Request.GetAllService_Test("default")
 	//fmt.Println(request.GetPodsOfNamespace("default", request.Test))
 	//Request.GetAllService("default", Request.Caicloud)
@@ -31,6 +34,13 @@ func main() {
 	//locust.LocustStart()
 	//locust.LocustClose()
 	//locust.FileTest()
+	//kubemark.GenerateReplicationcontrollerBody(10)
+	//kubemark.BuildNode(int32(5))
+	//scanner := bufio.NewScanner(os.Stdin)
+	//scanner.Scan()
+	//scanner.Text()
+	//kubemark.DeleteNode()
+	ab.Abtest()
 	fmt.Println("成功退出")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

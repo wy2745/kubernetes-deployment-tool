@@ -6,8 +6,8 @@ import (
 
 const (
 	root string = "/Users/panda/Desktop"
-	node string = "http://202.120.40.178"
-	port string = "1588"
+	node string = "http://192.168.6.15"
+	port string = "8080"
 	getfile string = "api/v1/pods"
 	desroot string = "/home/administrator/test/"
 	tmpurl string = node + ":" + port + "/" + getfile

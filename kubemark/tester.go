@@ -41,7 +41,12 @@ func podCreate(replic int32) int {
 			jsonParse.JsonUnmarsha(body, &v)
 			for _, pod := range v.Items {
 				if pod.Labels["name"] == replicationControllerName && pod.Status.Phase == "Running" {
-					count ++
+					for _, pc := range pod.Status.Conditions {
+						if pc.Type == "Ready" && pc.Status == "True" {
+							count ++
+						}
+					}
+
 				}
 			}
 			if count == int(replic) {

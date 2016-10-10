@@ -1,9 +1,9 @@
 package kubemark
 
 import (
-	classType "../type137"
+	classType "github.com/wy2745/kubernetes-deployment-tool/type137"
 	"net/http"
-	"../json"
+	"github.com/wy2745/kubernetes-deployment-tool/json"
 	"fmt"
 	"bytes"
 	"io/ioutil"

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"fmt"
 	"io/ioutil"
-	"../interf"
+	"github.com/wy2745/kubernetes-deployment-tool/interf"
 	"reflect"
-	"../type137"
-	"../type124"
+	"github.com/wy2745/kubernetes-deployment-tool/type137"
+	"github.com/wy2745/kubernetes-deployment-tool/type124"
 )
 
 func JsonNewDecoder(body []byte) *json.Decoder {

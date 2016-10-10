@@ -3,7 +3,7 @@ package type124
 import (
 	"gopkg.in/inf.v0"
 	"fmt"
-	"../interf"
+	"github.com/wy2745/kubernetes-deployment-tool/interf"
 	"strings"
 	"encoding/json"
 )

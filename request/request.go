@@ -2,14 +2,14 @@ package request
 
 import (
 	"net/http"
-	jsonParse "../json"
-	classType1 "../type124"
-	classType2 "../type137"
+	jsonParse "github.com/wy2745/kubernetes-deployment-tool/json"
+	classType1 "github.com/wy2745/kubernetes-deployment-tool/type124"
+	classType2 "github.com/wy2745/kubernetes-deployment-tool/type137"
 	"io/ioutil"
 	"fmt"
 	"bytes"
 	"strings"
-	"../interf"
+	"github.com/wy2745/kubernetes-deployment-tool/interf"
 )
 
 const (

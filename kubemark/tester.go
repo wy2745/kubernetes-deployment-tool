@@ -125,7 +125,11 @@ func PodListTest() {
 	w.Write([]string{" ", strconv.Itoa(nodeNum * rate[0]) + "C", strconv.Itoa(nodeNum * rate[0]) + "D", strconv.Itoa(nodeNum * rate[1]) + "C", strconv.Itoa(nodeNum * rate[1]) + "D", strconv.Itoa(nodeNum * rate[2]) + "C", strconv.Itoa(nodeNum * rate[2]) + "D", strconv.Itoa(nodeNum * rate[3]) + "C", strconv.Itoa(nodeNum * rate[3]) + "D", strconv.Itoa(nodeNum * rate[4]) + "C", strconv.Itoa(nodeNum * rate[4]) + "D", strconv.Itoa(nodeNum * rate[5]) + "C", strconv.Itoa(nodeNum * rate[5]) + "D"})
 
 	var data [13]int
+	var data1 [13]int
+	var data2 [13]int
 	data[0] = nodeNum
+	data1[0] = nodeNum
+	data2[0] = nodeNum
 	for index, replic := range rate {
 		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
@@ -136,36 +140,54 @@ func PodListTest() {
 		time.Sleep(time.Second * 3)
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
+		time.Sleep(time.Second * 3)
+		data1[2 * index + 1] = podCreate(int32(replic * nodeNum))
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
+		time.Sleep(time.Second * 3)
+		ab.Abtest(nodeN + "n" + podN + "p", "1")
+		time.Sleep(time.Second * 3)
+		data1[2 * index + 2] = podDelete()
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
+		time.Sleep(time.Second * 3)
+		data2[2 * index + 1] = podCreate(int32(replic * nodeNum))
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
+		time.Sleep(time.Second * 3)
+		ab.Abtest(nodeN + "n" + podN + "p", "1")
+		time.Sleep(time.Second * 3)
+		data2[2 * index + 2] = podDelete()
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
 	}
 	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
-	time.Sleep(time.Second * 3)
-	fmt.Println("第2次测试")
-	for index, replic := range rate {
-		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		time.Sleep(time.Second * 3)
-		nodeN := strconv.Itoa(nodeNum)
-		podN := strconv.Itoa(replic * nodeNum)
-		ab.Abtest(nodeN + "n" + podN + "p", "2")
-		time.Sleep(time.Second * 3)
-		data[2 * index + 2] = podDelete()
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
-	}
-	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
-	time.Sleep(time.Second * 3)
-	fmt.Println("第3次测试")
-	for index, replic := range rate {
-		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		time.Sleep(time.Second * 3)
-		nodeN := strconv.Itoa(nodeNum)
-		podN := strconv.Itoa(replic * nodeNum)
-		ab.Abtest(nodeN + "n" + podN + "p", "3")
-		time.Sleep(time.Second * 3)
-		data[2 * index + 2] = podDelete()
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
-	}
-	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12]), })
+	w.Write([]string{strconv.Itoa(data1[0]), strconv.Itoa(data1[1]), strconv.Itoa(data1[2]), strconv.Itoa(data1[3]), strconv.Itoa(data1[4]), strconv.Itoa(data1[5]), strconv.Itoa(data1[6]), strconv.Itoa(data1[7]), strconv.Itoa(data1[8]), strconv.Itoa(data1[9]), strconv.Itoa(data1[10]), strconv.Itoa(data1[11]), strconv.Itoa(data1[12])})
+	w.Write([]string{strconv.Itoa(data2[0]), strconv.Itoa(data2[1]), strconv.Itoa(data2[2]), strconv.Itoa(data2[3]), strconv.Itoa(data2[4]), strconv.Itoa(data2[5]), strconv.Itoa(data2[6]), strconv.Itoa(data2[7]), strconv.Itoa(data2[8]), strconv.Itoa(data2[9]), strconv.Itoa(data2[10]), strconv.Itoa(data2[11]), strconv.Itoa(data2[12])})
+	//time.Sleep(time.Second * 3)
+	//fmt.Println("第2次测试")
+	//for index, replic := range rate {
+	//	data[2 * index + 1] = podCreate(int32(replic * nodeNum))
+	//	fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
+	//	time.Sleep(time.Second * 3)
+	//	nodeN := strconv.Itoa(nodeNum)
+	//	podN := strconv.Itoa(replic * nodeNum)
+	//	ab.Abtest(nodeN + "n" + podN + "p", "2")
+	//	time.Sleep(time.Second * 3)
+	//	data[2 * index + 2] = podDelete()
+	//	fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
+	//}
+	//w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
+	//time.Sleep(time.Second * 3)
+	//fmt.Println("第3次测试")
+	//for index, replic := range rate {
+	//	data[2 * index + 1] = podCreate(int32(replic * nodeNum))
+	//	fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
+	//	time.Sleep(time.Second * 3)
+	//	nodeN := strconv.Itoa(nodeNum)
+	//	podN := strconv.Itoa(replic * nodeNum)
+	//	ab.Abtest(nodeN + "n" + podN + "p", "3")
+	//	time.Sleep(time.Second * 3)
+	//	data[2 * index + 2] = podDelete()
+	//	fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
+	//}
+	//w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12]), })
 	w.Flush()
 	if err := w.Error(); err != nil {
 		log.Fatal(err)

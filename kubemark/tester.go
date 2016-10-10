@@ -13,6 +13,7 @@ import (
 	"os"
 	"encoding/csv"
 	"log"
+	"os/exec"
 )
 
 const (
@@ -51,7 +52,6 @@ func podCreate(replic int32) int {
 			}
 			if count == replic {
 				endTime := time.Now()
-				fmt.Println("pod的数量", len(v.Items))
 				return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 
 			}
@@ -134,6 +134,23 @@ func DeleteNodev2() {
 			InvokeRequest("DELETE", url, nil)
 		}
 	}
+
+	for {
+		url := request.KubemarkServer_Test + request.GenerateNodeUrl()
+		resp := InvokeRequest("GET", url, nil)
+		if (resp != nil) {
+			defer resp.Body.Close()
+			var v classType.NodeList
+			body, err := ioutil.ReadAll(resp.Body)
+			if (err != nil) {
+				fmt.Print(err)
+			}
+			jsonParse.JsonUnmarsha(body, &v)
+			if len(v.Items) == 0 {
+				return
+			}
+		}
+	}
 }
 
 func PodListTest() {
@@ -210,6 +227,15 @@ func PodListTest() {
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
 	}
+	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/changeNode.sh 10")
+	cmd.Output()
+}
+
+func ShTest() {
+	DeleteNodev2()
+	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/changeNode.sh 5")
+	cmd.Output()
+	fmt.Println("好了!!!!!!!")
 }
 
 func Test() {

@@ -129,11 +129,11 @@ func PodListTest() {
 	for index, replic := range rate {
 		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		//time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
-		//time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 3)
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 	}
@@ -143,11 +143,11 @@ func PodListTest() {
 	for index, replic := range rate {
 		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		//time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "2")
-		//time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 3)
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 	}
@@ -157,11 +157,11 @@ func PodListTest() {
 	for index, replic := range rate {
 		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		//time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "3")
-		//time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 3)
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 	}

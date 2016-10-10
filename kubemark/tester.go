@@ -168,6 +168,7 @@ func PodListTest() {
 		changeNode(nodeNum)
 
 		waitallNodeReady(nodeNum)
+		time.Sleep(time.Second * 5)
 
 		var rate = [6]int{3, 5, 10, 15, 20, 30}
 		var nodeNum = getNodeNum()

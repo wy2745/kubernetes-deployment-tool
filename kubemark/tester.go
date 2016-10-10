@@ -7,13 +7,13 @@ import (
 	"github.com/wy2745/kubernetes-deployment-tool/json"
 	classType "github.com/wy2745/kubernetes-deployment-tool/type137"
 	"time"
-	"github.com/wy2745/kubernetes-deployment-tool/ab"
 	"strconv"
 	"bufio"
 	"os"
-	"encoding/csv"
-	"log"
 	"os/exec"
+	"encoding/csv"
+	"github.com/wy2745/kubernetes-deployment-tool/ab"
+	"log"
 )
 
 const (
@@ -161,17 +161,28 @@ func DeleteNodev2() {
 	}
 }
 
-func PodListTest() {
+func PodListTest(mode int) {
+
+	var start int
+	var stop int
+	if mode == 1 {
+		start = 0
+		stop = 4
+	} else {
+		start = 4
+		stop = 7
+	}
 
 	var nodenum = [7]int{5, 10, 20, 40, 80, 160, 320}
-	for _, nodeNum := range nodenum {
+	for i := start; i < stop; i++ {
+
+		nodeNum := nodenum[i]
 		changeNode(nodeNum)
 
 		waitallNodeReady(nodeNum)
 		time.Sleep(time.Second * 5)
 
 		var rate = [6]int{3, 5, 10, 15, 20, 30}
-		var nodeNum = getNodeNum()
 		fmt.Println("node num：", nodeNum)
 		fmt.Println("第1次测试")
 		f, _ := os.Create("/home/administrator/test/" + strconv.Itoa(nodeNum) + "n.csv")
@@ -204,7 +215,7 @@ func PodListTest() {
 			data2[2 * index + 1] = podCreate(int32(replic * nodeNum))
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
 			ab.Abtest(nodeN + "n" + podN + "p", "1")
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 10)
 			data2[2 * index + 2] = podDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
 		}
@@ -259,8 +270,9 @@ func Test() {
 	fmt.Println("^_^")
 	fmt.Println("1.删除node")
 	fmt.Println("2.删除pod")
-	fmt.Println("3.跑测试")
-	fmt.Println("4.退出")
+	fmt.Println("3.跑测试(5n-40n)")
+	fmt.Println("4.跑测试(80n-320n)")
+	fmt.Println("5.退出")
 	for {
 		scanner.Scan()
 		line = scanner.Text()
@@ -270,14 +282,17 @@ func Test() {
 		case "2":
 			podDelete()
 		case "3":
-			PodListTest()
+			PodListTest(1)
 		case "4":
+			PodListTest(2)
+		case "5":
 			return
 		}
 		fmt.Println("1.删除node")
 		fmt.Println("2.删除pod")
-		fmt.Println("3.跑测试")
-		fmt.Println("4.退出")
+		fmt.Println("3.跑测试(5n-40n)")
+		fmt.Println("4.跑测试(80n-320n)")
+		fmt.Println("5.退出")
 
 	}
 }

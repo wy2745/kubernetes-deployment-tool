@@ -9,7 +9,7 @@ const (
 	node string = "http://202.120.40.178"
 	port string = "1588"
 	getfile string = "api/v1/pods"
-	desroot string = "/Users/panda/Desktop/test/"
+	desroot string = "/home/administrator/test/"
 	tmpurl string = node + ":" + port + "/" + getfile
 )
 

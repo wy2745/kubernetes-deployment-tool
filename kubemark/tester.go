@@ -234,7 +234,7 @@ func PodListTest() {
 func ShTest() {
 	DeleteNodev2()
 	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/changeNode.sh 5")
-	cmd.Output()
+	fmt.Println(cmd.Output())
 	fmt.Println("好了!!!!!!!")
 }
 

@@ -30,7 +30,7 @@ func podCreate(replic int32) int {
 	for {
 		url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
 		resp := InvokeRequest("GET", url, nil)
-		var count = 0
+		var count = int32(0)
 		if (resp != nil) {
 			defer resp.Body.Close()
 			var v classType.PodList
@@ -49,7 +49,7 @@ func podCreate(replic int32) int {
 
 				}
 			}
-			if count == int(replic) {
+			if count == replic {
 				endTime := time.Now()
 				return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 

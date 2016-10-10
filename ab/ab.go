@@ -9,7 +9,7 @@ const (
 	node string = "http://192.168.6.15"
 	port string = "8080"
 	getfile string = "api/v1/pods"
-	desroot string = "/home/administrator/test/"
+	desroot string = "/home/administrator/test/ab/"
 	tmpurl string = node + ":" + port + "/" + getfile
 )
 

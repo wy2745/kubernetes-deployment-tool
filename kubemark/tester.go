@@ -1,13 +1,13 @@
 package kubemark
 
 import (
-	"../request"
+	"github.com/wy2745/kubernetes-deployment-tool/request"
 	"fmt"
 	"io/ioutil"
-	"../json"
-	classType "../type137"
+	"github.com/wy2745/kubernetes-deployment-tool/json"
+	classType "github.com/wy2745/kubernetes-deployment-tool/type137"
 	"time"
-	"../ab"
+	"github.com/wy2745/kubernetes-deployment-tool/ab"
 	"strconv"
 	"bufio"
 	"os"

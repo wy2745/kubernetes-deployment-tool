@@ -6,9 +6,9 @@ import (
 	"bufio"
 	"os"
 	"strings"
-	Request "../request"
-	Locust "../locust"
-	"../interf"
+	Request "github.com/wy2745/kubernetes-deployment-tool/request"
+	Locust "github.com/wy2745/kubernetes-deployment-tool/locust"
+	"github.com/wy2745/kubernetes-deployment-tool/interf"
 	"time"
 	"math/rand"
 )

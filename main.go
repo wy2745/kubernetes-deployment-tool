@@ -6,7 +6,7 @@ import (
 	//WorkLoadController "./workload"
 	//"./request"
 	//"./locust"
-	"./kubemark"
+	"github.com/wy2745/kubernetes-deployment-tool/kubemark"
 	//"bufio"
 	//"os"
 )

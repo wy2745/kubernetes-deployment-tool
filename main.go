@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"./ab"
+	//"./ab"
 	//WorkLoadController "./workload"
 	//"./request"
 	//"./locust"
-	//"./kubemark"
+	"./kubemark"
 	//"bufio"
 	//"os"
 )
@@ -40,7 +40,8 @@ func main() {
 	//scanner.Scan()
 	//scanner.Text()
 	//kubemark.DeleteNode()
-	ab.Abtest()
+	//ab.Abtest()
+	kubemark.Test()
 	fmt.Println("成功退出")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

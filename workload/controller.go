@@ -9,7 +9,6 @@ import (
 	Request "../request"
 	Locust "../locust"
 	"../interf"
-	"../ab"
 	"time"
 	"math/rand"
 )
@@ -84,7 +83,7 @@ func StartJobVersion() {
 		case "3":
 			if WL != nil {
 				fmt.Println("准备测试...")
-				ab.Abtest()
+				//ab.Abtest()
 				fmt.Println("测试完成，文件储存完成")
 			}
 		case "4":

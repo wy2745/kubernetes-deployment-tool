@@ -51,6 +51,7 @@ func podCreate(replic int32) int {
 			}
 			if count == replic {
 				endTime := time.Now()
+				fmt.Println("pod的数量", len(v.Items))
 				return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 
 			}
@@ -80,7 +81,20 @@ func podDelete() int {
 			}
 		}
 	}
+
 	endTime := time.Now()
+	url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
+	resp = InvokeRequest("GET", url, nil)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.PodList
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		fmt.Println("还有", len(v.Items), "个pod剩余")
+	}
 	return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 }
 

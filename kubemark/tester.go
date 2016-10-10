@@ -124,6 +124,7 @@ func PodListTest() {
 	fmt.Println("第1次测试")
 	for _, replic := range rate {
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "ms")
+		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
@@ -134,6 +135,7 @@ func PodListTest() {
 	fmt.Println("第2次测试")
 	for _, replic := range rate {
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "ms")
+		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "2")
@@ -145,6 +147,7 @@ func PodListTest() {
 	fmt.Println("第3次测试")
 	for _, replic := range rate {
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "ms")
+		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "3")

@@ -5,7 +5,7 @@ const (
 	password string = "FlbY3CD6mcFUfZvb"
 
 	destinationServer_Test string = "http://202.120.40.177:16380"
-	KubemarkServer_Test string = "http://202.120.40.178:1588"
+	KubemarkServer_Test string = "http://192.168.6.15:8080"
 	destinationServer_Caicloud string = "https://sjtu.caicloudapp.com"
 	GetNodeList_GET string = "/api/v1/nodes"   //list or watch objects of kind Node
 	CreateNode_POST string = "/api/v1/nodes"    //create a Node

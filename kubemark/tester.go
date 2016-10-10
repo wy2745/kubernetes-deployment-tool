@@ -15,6 +15,7 @@ import (
 
 const (
 	replicationControllerName = "nginx"
+	unit = int64(1000000)
 )
 
 func podCreate(replic int32) int64 {
@@ -43,7 +44,7 @@ func podCreate(replic int32) int64 {
 			}
 			if count == int(replic) {
 				endTime := time.Now()
-				return (endTime.UnixNano() - startTime.UnixNano()) / int64(1000)
+				return (endTime.UnixNano() - startTime.UnixNano()) / unit
 
 			}
 		}
@@ -73,7 +74,7 @@ func podDelete() int64 {
 		}
 	}
 	endTime := time.Now()
-	return (endTime.UnixNano() - startTime.UnixNano()) / int64(1000)
+	return (endTime.UnixNano() - startTime.UnixNano()) / unit
 }
 
 func getNodeNum() int {
@@ -122,33 +123,33 @@ func PodListTest() {
 	fmt.Println("node num：", nodeNum)
 	fmt.Println("第1次测试")
 	for _, replic := range rate {
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "s")
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "ms")
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 3)
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", podDelete(), "s")
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", podDelete(), "ms")
 	}
 	time.Sleep(time.Second * 3)
 	fmt.Println("第2次测试")
 	for _, replic := range rate {
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "s")
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "ms")
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "2")
 		time.Sleep(time.Second * 3)
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", podDelete(), "s")
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", podDelete(), "ms")
 	}
 
 	time.Sleep(time.Second * 3)
 	fmt.Println("第3次测试")
 	for _, replic := range rate {
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "s")
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", podCreate(int32(replic * nodeNum)), "ms")
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "3")
 		time.Sleep(time.Second * 3)
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", podDelete(), "s")
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", podDelete(), "ms")
 	}
 
 }

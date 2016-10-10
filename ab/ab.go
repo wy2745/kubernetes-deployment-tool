@@ -15,7 +15,7 @@ const (
 
 func Abtest(name string, count string) {
 	var err error
-	str := "ab -n 10 -c 10 -e " + desroot + "record" + name + "-" + count + ".csv" + " " + tmpurl
+	str := "ab -n 2000 -c 10 -e " + desroot + "record" + name + "-" + count + ".csv" + " " + tmpurl
 	cmd := exec.Command("/bin/sh", "-c", str)
 	_, err = cmd.Output()
 	err = cmd.Start()

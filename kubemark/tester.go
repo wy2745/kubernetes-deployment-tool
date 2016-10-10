@@ -12,6 +12,7 @@ import (
 	"bufio"
 	"os"
 	"encoding/csv"
+	"log"
 )
 
 const (
@@ -166,6 +167,9 @@ func PodListTest() {
 	}
 	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12]), })
 	w.Flush()
+	if err := w.Error(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Test() {

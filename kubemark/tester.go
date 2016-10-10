@@ -82,19 +82,23 @@ func podDelete() int {
 		}
 	}
 
-	endTime := time.Now()
-	url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
-	resp = InvokeRequest("GET", url, nil)
-	if (resp != nil) {
-		defer resp.Body.Close()
-		var v classType.PodList
-		body, err := ioutil.ReadAll(resp.Body)
-		if (err != nil) {
-			fmt.Print(err)
+	for {
+		url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
+		resp = InvokeRequest("GET", url, nil)
+		if (resp != nil) {
+			defer resp.Body.Close()
+			var v classType.PodList
+			body, err := ioutil.ReadAll(resp.Body)
+			if (err != nil) {
+				fmt.Print(err)
+			}
+			jsonParse.JsonUnmarsha(body, &v)
+			if len(v.Items) == 0 {
+				break
+			}
 		}
-		jsonParse.JsonUnmarsha(body, &v)
-		fmt.Println("还有", len(v.Items), "个pod剩余")
 	}
+	endTime := time.Now()
 	return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 }
 
@@ -152,25 +156,20 @@ func PodListTest() {
 	for index, replic := range rate {
 		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		time.Sleep(time.Second * 3)
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 3)
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
-		time.Sleep(time.Second * 3)
 		data1[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
-		time.Sleep(time.Second * 3)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 3)
 		data1[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
-		time.Sleep(time.Second * 3)
 		data2[2 * index + 1] = podCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
-		time.Sleep(time.Second * 3)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 3)
 		data2[2 * index + 2] = podDelete()

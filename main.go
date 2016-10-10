@@ -42,6 +42,7 @@ func main() {
 	//kubemark.DeleteNode()
 	//ab.Abtest()
 	kubemark.Test()
+	//kubemark.Csvfunc()
 	fmt.Println("成功退出")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

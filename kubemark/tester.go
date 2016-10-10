@@ -137,7 +137,7 @@ func PodListTest() {
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 	}
-	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
+	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
 	time.Sleep(time.Second * 3)
 	fmt.Println("第2次测试")
 	for index, replic := range rate {
@@ -151,7 +151,7 @@ func PodListTest() {
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 	}
-	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
+	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
 	time.Sleep(time.Second * 3)
 	fmt.Println("第3次测试")
 	for index, replic := range rate {
@@ -165,7 +165,7 @@ func PodListTest() {
 		data[2 * index + 2] = podDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 	}
-	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12]), })
+	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12]), })
 	w.Flush()
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
@@ -200,4 +200,16 @@ func Test() {
 
 	}
 }
+//func Csvfunc() {
+//	f, _ := os.Create("/Users/panda/Desktop/" + "5n.csv")
+//	var rate = [6]int{3, 5, 10, 15, 20, 30}
+//	defer f.Close()
+//
+//	w := csv.NewWriter(f)
+//	w.Write([]string{strconv.Itoa(rate[0]) + "C", strconv.Itoa(rate[0]) + "C"})
+//	w.Flush()
+//	if err := w.Error(); err != nil {
+//		log.Fatal(err)
+//	}
+//}
 

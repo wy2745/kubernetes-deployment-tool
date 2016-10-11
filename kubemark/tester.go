@@ -354,11 +354,8 @@ func Test() {
 	fmt.Println("^_^")
 	fmt.Println("1.删除node")
 	fmt.Println("2.删除pod")
-	fmt.Println("3.跑测试(5n-40n)")
-	fmt.Println("4.跑测试(80n)")
-	fmt.Println("5.跑测试(1600n)")
-	fmt.Println("6.跑测试(320n)")
-	fmt.Println("7.退出")
+	fmt.Println("3.跑测试")
+	fmt.Println("4.退出")
 	for {
 		scanner.Scan()
 		line = scanner.Text()
@@ -368,23 +365,14 @@ func Test() {
 		case "2":
 			podDelete()
 		case "3":
-			PodListTest(1)
+			PodListTest()
 		case "4":
-			PodListTest(2)
-		case "5":
-			PodListTest(3)
-		case "6":
-			PodListTest(4)
-		case "7":
 			return
 		}
 		fmt.Println("1.删除node")
 		fmt.Println("2.删除pod")
-		fmt.Println("3.跑测试(5n-40n)")
-		fmt.Println("4.跑测试(80n)")
-		fmt.Println("5.跑测试(1600n)")
-		fmt.Println("6.跑测试(320n)")
-		fmt.Println("7.退出")
+		fmt.Println("3.跑测试")
+		fmt.Println("4.退出")
 
 	}
 }

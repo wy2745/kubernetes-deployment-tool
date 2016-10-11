@@ -50,10 +50,10 @@ func PodCreate(replic int32, client *http.Client) int {
 	command = append(command, "/home/auto-reload-nginx.sh")
 	body := request.GenerateReplicationcontrollerBodyV2("default", "ymqytw/nginxhttps:1.5", replicationControllerName, replic, command)
 	url := request.KubemarkServer_Test + request.GenerateReplicationControllerNamespaceUrl("default")
-	InvokeRequestV2("POST", url, body, &client)
+	InvokeRequestV2("POST", url, body, client)
 	for {
 		url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
-		resp := InvokeRequestV2("GET", url, nil, &client)
+		resp := InvokeRequestV2("GET", url, nil, client)
 		var count = int32(0)
 		if (resp != nil) {
 			defer resp.Body.Close()
@@ -128,7 +128,7 @@ func PodDelete(clients []http.Client) int {
 
 func getNodeNum(client *http.Client) int {
 	url := request.KubemarkServer_Test + request.GenerateNodeUrl()
-	resp := InvokeRequestV2("GET", url, nil, &client)
+	resp := InvokeRequestV2("GET", url, nil, client)
 	if (resp != nil) {
 		defer resp.Body.Close()
 		var v classType.NodeList
@@ -144,7 +144,7 @@ func getNodeNum(client *http.Client) int {
 
 func waitallNodeReady(nodeNum int, client *http.Client) bool {
 	for {
-		if getNodeNum(&client) == nodeNum {
+		if getNodeNum(client) == nodeNum {
 			return true
 		}
 	}

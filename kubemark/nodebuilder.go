@@ -5,6 +5,7 @@ import (
 	"github.com/wy2745/kubernetes-deployment-tool/json"
 	"fmt"
 	"io/ioutil"
+	"bytes"
 )
 
 const (
@@ -71,30 +72,28 @@ func GenerateNodeNameUrl(name string) string {
 	return CreateNode_POST + "/" + name
 }
 
+func InvokeRequest(method string, url string, body []byte) *http.Response {
+	client := http.Client{}
+	var req *http.Request
+	var err error
+	if body != nil {
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
+	} else {
+		req, err = http.NewRequest(method, url, nil)
+	}
 
-
-//func InvokeRequest(method string, url string, body []byte) *http.Response {
-//	client := http.Client{}
-//	var req *http.Request
-//	var err error
-//	if body != nil {
-//		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
-//	} else {
-//		req, err = http.NewRequest(method, url, nil)
-//	}
-//
-//	if method != "GET" {
-//		req.Header.Set("Content-Type", "application/json")
-//	}
-//	resp, err := client.Do(req)
-//	//fmt.Println(resp.Header)
-//	//fmt.Println(resp.Status)
-//	//fmt.Println(resp.StatusCode)
-//	if err != nil {
-//		fmt.Print(err)
-//	}
-//	return resp
-//}
+	if method != "GET" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := client.Do(req)
+	//fmt.Println(resp.Header)
+	//fmt.Println(resp.Status)
+	//fmt.Println(resp.StatusCode)
+	if err != nil {
+		fmt.Print(err)
+	}
+	return resp
+}
 
 func BuildNode(num int32) {
 	url := destinationServer_Test + GenerateReplicationControllerNamespaceUrl("kubemark")

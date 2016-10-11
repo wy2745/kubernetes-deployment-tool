@@ -49,7 +49,7 @@ func main() {
 	//kubemark.PodListTestV2(nodeNum)
 	//kubemark.AbscriptTest()
 	//ab.AbtestV2("asd", "1")
-	kubemark.PodListTest()
+	kubemark.Test()
 	fmt.Println("成功退出")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

@@ -60,6 +60,7 @@ func PodCreate(replic int32) int {
 }
 
 func PodDelete() int {
+	fmt.Println("开始删除")
 	startTime := time.Now()
 	url := request.KubemarkServer_Test + request.GenerateReplicationControllerNameUrl("default", replicationControllerName)
 	InvokeRequest("DELETE", url, nil)

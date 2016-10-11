@@ -78,6 +78,7 @@ func PodDelete() int {
 		for _, pod := range v.Items {
 			if pod.Labels["name"] == replicationControllerName {
 				url = request.KubemarkServer_Test + request.GeneratePodNameUrl("default", pod.Name)
+				fmt.Println(url)
 				InvokeRequest("DELETE", url, nil)
 			}
 		}

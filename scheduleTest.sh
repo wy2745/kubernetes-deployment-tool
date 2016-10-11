@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sudo ls
+sudo sysctl -w net.ipv4.tcp_fin_timeout=5
 
 ./kubernetes-deployment-tool -dp
 ./kubernetes-deployment-tool -dn

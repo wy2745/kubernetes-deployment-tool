@@ -21,7 +21,7 @@ const (
 	unit = int64(1000000)
 )
 
-func podCreate(replic int32) int {
+func PodCreate(replic int32) int {
 	var command []string
 	startTime := time.Now()
 	command = append(command, "/home/auto-reload-nginx.sh")
@@ -59,7 +59,7 @@ func podCreate(replic int32) int {
 	}
 }
 
-func podDelete() int {
+func PodDelete() int {
 	startTime := time.Now()
 	url := request.KubemarkServer_Test + request.GenerateReplicationControllerNameUrl("default", replicationControllerName)
 	InvokeRequest("DELETE", url, nil)
@@ -163,13 +163,13 @@ func DeleteNodev2() {
 
 func PodListTest() {
 
-	podDelete()
+	PodDelete()
 
 	var nodenum = [7]int{5, 10, 20, 40, 80, 160, 320}
 	for i := 0; i < 7; i++ {
 
 		nodeNum := nodenum[i]
-		changeNode(nodeNum)
+		ChangeNode(nodeNum)
 
 		waitallNodeReady(nodeNum)
 		time.Sleep(time.Second * 5)
@@ -190,28 +190,28 @@ func PodListTest() {
 		data1[0] = nodeNum
 		data2[0] = nodeNum
 		for index, replic := range rate {
-			data[2 * index + 1] = podCreate(int32(replic * nodeNum))
+			data[2 * index + 1] = PodCreate(int32(replic * nodeNum))
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
 			nodeN := strconv.Itoa(nodeNum)
 			podN := strconv.Itoa(replic * nodeNum)
 			//ab.Abtest(nodeN + "n" + podN + "p", "1")
 			ab.AbtestV2(nodeN + "n" + podN + "p", "1")
 			time.Sleep(time.Second * 3)
-			data[2 * index + 2] = podDelete()
+			data[2 * index + 2] = PodDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
-			data1[2 * index + 1] = podCreate(int32(replic * nodeNum))
+			data1[2 * index + 1] = PodCreate(int32(replic * nodeNum))
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
 			//ab.Abtest(nodeN + "n" + podN + "p", "1")
 			ab.AbtestV2(nodeN + "n" + podN + "p", "1")
 			time.Sleep(time.Second * 3)
-			data1[2 * index + 2] = podDelete()
+			data1[2 * index + 2] = PodDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
-			data2[2 * index + 1] = podCreate(int32(replic * nodeNum))
+			data2[2 * index + 1] = PodCreate(int32(replic * nodeNum))
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
 			//ab.Abtest(nodeN + "n" + podN + "p", "1")
 			ab.AbtestV2(nodeN + "n" + podN + "p", "1")
 			time.Sleep(time.Second * 10)
-			data2[2 * index + 2] = podDelete()
+			data2[2 * index + 2] = PodDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
 		}
 		w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
@@ -255,9 +255,9 @@ func PodListTest() {
 
 func PodListTestV2(nodeNum int) {
 
-	podDelete()
+	PodDelete()
 
-	changeNode(nodeNum)
+	ChangeNode(nodeNum)
 
 	waitallNodeReady(nodeNum)
 	time.Sleep(time.Second * 5)
@@ -278,25 +278,25 @@ func PodListTestV2(nodeNum int) {
 	data1[0] = nodeNum
 	data2[0] = nodeNum
 	for index, replic := range rate {
-		data[2 * index + 1] = podCreate(int32(replic * nodeNum))
+		data[2 * index + 1] = PodCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
 		nodeN := strconv.Itoa(nodeNum)
 		podN := strconv.Itoa(replic * nodeNum)
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 3)
-		data[2 * index + 2] = podDelete()
+		data[2 * index + 2] = PodDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
-		data1[2 * index + 1] = podCreate(int32(replic * nodeNum))
+		data1[2 * index + 1] = PodCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 3)
-		data1[2 * index + 2] = podDelete()
+		data1[2 * index + 2] = PodDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
-		data2[2 * index + 1] = podCreate(int32(replic * nodeNum))
+		data2[2 * index + 1] = PodCreate(int32(replic * nodeNum))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
 		ab.Abtest(nodeN + "n" + podN + "p", "1")
 		time.Sleep(time.Second * 10)
-		data2[2 * index + 2] = podDelete()
+		data2[2 * index + 2] = PodDelete()
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
 	}
 	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
@@ -336,8 +336,59 @@ func PodListTestV2(nodeNum int) {
 	}
 
 }
+func CnHandler(nodeNum int) {
+	ChangeNode(nodeNum)
 
-func changeNode(num int) {
+	waitallNodeReady(nodeNum)
+	time.Sleep(time.Second * 3)
+}
+func AbHandler(nodeNum int, replic int, count int) {
+	nodeN := strconv.Itoa(nodeNum)
+	podN := strconv.Itoa(replic * nodeNum)
+	couN := strconv.Itoa(count)
+	ab.Abtest(nodeN + "n" + podN + "p", couN)
+}
+
+func CptHandler(nodeNum int) {
+	var rate = [6]int{3, 5, 10, 15, 20, 30}
+	fmt.Println("node num：", nodeNum)
+	fmt.Println("开始测试")
+	f, _ := os.Create("/home/administrator/test/" + strconv.Itoa(nodeNum) + "n.csv")
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	w.Write([]string{" ", strconv.Itoa(nodeNum * rate[0]) + "C", strconv.Itoa(nodeNum * rate[0]) + "D", strconv.Itoa(nodeNum * rate[1]) + "C", strconv.Itoa(nodeNum * rate[1]) + "D", strconv.Itoa(nodeNum * rate[2]) + "C", strconv.Itoa(nodeNum * rate[2]) + "D", strconv.Itoa(nodeNum * rate[3]) + "C", strconv.Itoa(nodeNum * rate[3]) + "D", strconv.Itoa(nodeNum * rate[4]) + "C", strconv.Itoa(nodeNum * rate[4]) + "D", strconv.Itoa(nodeNum * rate[5]) + "C", strconv.Itoa(nodeNum * rate[5]) + "D"})
+
+	var data [13]int
+	var data1 [13]int
+	var data2 [13]int
+	data[0] = nodeNum
+	data1[0] = nodeNum
+	data2[0] = nodeNum
+	for index, replic := range rate {
+		data[2 * index + 1] = PodCreate(int32(replic * nodeNum))
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
+		data[2 * index + 2] = PodDelete()
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
+		data1[2 * index + 1] = PodCreate(int32(replic * nodeNum))
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
+		data1[2 * index + 2] = PodDelete()
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
+		data2[2 * index + 1] = PodCreate(int32(replic * nodeNum))
+		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
+		data2[2 * index + 2] = PodDelete()
+		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
+	}
+	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
+	w.Write([]string{strconv.Itoa(data1[0]), strconv.Itoa(data1[1]), strconv.Itoa(data1[2]), strconv.Itoa(data1[3]), strconv.Itoa(data1[4]), strconv.Itoa(data1[5]), strconv.Itoa(data1[6]), strconv.Itoa(data1[7]), strconv.Itoa(data1[8]), strconv.Itoa(data1[9]), strconv.Itoa(data1[10]), strconv.Itoa(data1[11]), strconv.Itoa(data1[12])})
+	w.Write([]string{strconv.Itoa(data2[0]), strconv.Itoa(data2[1]), strconv.Itoa(data2[2]), strconv.Itoa(data2[3]), strconv.Itoa(data2[4]), strconv.Itoa(data2[5]), strconv.Itoa(data2[6]), strconv.Itoa(data2[7]), strconv.Itoa(data2[8]), strconv.Itoa(data2[9]), strconv.Itoa(data2[10]), strconv.Itoa(data2[11]), strconv.Itoa(data2[12])})
+	w.Flush()
+	if err := w.Error(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ChangeNode(num int) {
 	DeleteNodev2()
 	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/changeNode.sh " + strconv.Itoa(num))
 	cmd.Output()
@@ -363,7 +414,7 @@ func Test() {
 		case "1":
 			DeleteNodev2()
 		case "2":
-			podDelete()
+			PodDelete()
 		case "3":
 			PodListTest()
 		case "4":

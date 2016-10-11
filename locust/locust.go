@@ -18,17 +18,29 @@ const (
 	fileroot string = "/Users/panda/Documents/github/locustfile.py"
 	//本地启动的指令，以后可能会使用master-slave模式
 	startcommand string = "locust -f " + fileroot + " --host=" + destination
-	startTestUrl string = "http://localhost:8089/swarm"
-	stopTestUrl string = "http://localhost:8089/stop"
+	destinationUrl string = "http://192.168.6.31:8089"
+	startTestUrl string = destinationUrl + "/swarm"
+	stopTestUrl string = destinationUrl + "/stop"
 	locust_count string = "locust_count"
 	hatch_rate string = "hatch_rate"
-	requestsUrl string = "http://localhost:8089/stats/requests/csv"
-	distributionUrl string = "http://localhost:8089/stats/distribution/csv"
-	exceptionsUrl string = "http://localhost:8089/exceptions/csv"
+	requestsUrl string = destinationUrl + "/stats/requests/csv"
+	distributionUrl string = destinationUrl + "/stats/distribution/csv"
+	exceptionsUrl string = destinationUrl + "/exceptions/csv"
+	destinationRoot string = "/home/administrator/test/locust/"
 	requestRoot string = "/Users/panda/Documents/github/request.csv"
-	distributionRoot string = "/Users/panda/Documents/github/idstribution.csv"
+	distributionRoot string = "/Users/panda/Documents/github/distribution.csv"
 	exceptionsRoot string = "/Users/panda/Documents/github/exceptions.csv"
 )
+
+func generateRequestName(fileName string) string {
+	return destinationRoot + "request" + fileName + ".csv"
+}
+func generateDistributionName(fileName string) string {
+	return destinationRoot + "distribution" + fileName + ".csv"
+}
+func generateExceptionsName(fileName string) string {
+	return destinationRoot + "exceptions" + fileName + ".csv"
+}
 
 func Locust(scanner *bufio.Scanner) {
 	fmt.Println("1.开启Locust")
@@ -84,9 +96,8 @@ func swarmBody(str1 string, str2 string) string {
 }
 func LocustTestStop() {
 	http.Get(stopTestUrl)
-	FileTest()
 }
-func FileTest() {
+func fileTest() {
 	resp, err := http.Get(requestsUrl)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -123,6 +134,43 @@ func FileTest() {
 	defer out.Close()
 	io.Copy(out, resp.Body)
 }
+func fileTestV2(fileName string) {
+	resp, err := http.Get(requestsUrl)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer resp.Body.Close()
+	out, err := os.Create(generateRequestName(fileName))
+	if err != nil {
+		// panic?
+	}
+	defer out.Close()
+	io.Copy(out, resp.Body)
+
+	resp, err = http.Get(distributionUrl)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer resp.Body.Close()
+	out, err = os.Create(generateDistributionName(fileName))
+	if err != nil {
+		// panic?
+	}
+	defer out.Close()
+	io.Copy(out, resp.Body)
+
+	resp, err = http.Get(exceptionsUrl)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer resp.Body.Close()
+	out, err = os.Create(generateExceptionsName(fileName))
+	if err != nil {
+		// panic?
+	}
+	defer out.Close()
+	io.Copy(out, resp.Body)
+}
 
 func LocustParaSet(scanner *bufio.Scanner) {
 	var line string
@@ -152,11 +200,28 @@ func LocustParaSet(scanner *bufio.Scanner) {
 			return
 		} else {
 			time.Sleep(time.Duration(tim) * time.Second)
-			LocustTestStop()
+			//LocustTestStop()
 			fmt.Println("测试完成，结果已经存起来了")
 			return
 		}
 	}()
+}
+
+func LocustTest(locust_count string, hatch_rate string) {
+	LocustTestStop()
+	scanner := bufio.NewScanner(os.Stdin)
+	client := http.Client{}
+	fmt.Println(swarmBody(locust_count, hatch_rate))
+	body := []byte(swarmBody(locust_count, hatch_rate))
+	req, _ := http.NewRequest("POST", startTestUrl, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	client.Do(req)
+	fmt.Println("输入任意字符结束")
+	scanner.Scan()
+	scanner.Text()
+	LocustTestStop()
+	fileTestV2(locust_count + "C" + hatch_rate + "H")
+
 }
 func LocustClose() {
 	if (!locustOpened()) {

@@ -8,10 +8,10 @@ import (
 	"io/ioutil"
 )
 
-func BuildNginx() {
+func BuildNginx(num int32) {
 	url := kubemark.DestinationServer_Test + kubemark.GenerateReplicationControllerNamespaceUrl("default")
 	fmt.Println(url)
-	body := generateNginxReplic(int32(3))
+	body := generateNginxReplic(num)
 	fmt.Println(string(body))
 	resp := kubemark.InvokeRequest("POST", url, body)
 	if (resp != nil) {
@@ -41,6 +41,33 @@ func BuildNginx() {
 		fmt.Println(v)
 	}
 
+	for {
+		count := int32(0)
+		url := kubemark.DestinationServer_Test + kubemark.GeneratePodNamespaceUrl("default")
+		resp := kubemark.InvokeRequest("GET", url, nil)
+		if (resp != nil) {
+			defer resp.Body.Close()
+			var v classType.PodList
+			body, err := ioutil.ReadAll(resp.Body)
+			if (err != nil) {
+				fmt.Print(err)
+			}
+			jsonParse.JsonUnmarsha(body, &v)
+			for _, pod := range v.Items {
+				if pod.Labels["name"] == "nginx" && pod.Status.Phase == "Running" {
+					for _, pc := range pod.Status.Conditions {
+						if pc.Type == "Ready" && pc.Status == "True" {
+							count ++
+						}
+					}
+
+				}
+			}
+		}
+		if count == num {
+			return
+		}
+	}
 }
 
 func DestoryNginx() {

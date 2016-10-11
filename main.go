@@ -48,7 +48,6 @@ func main() {
 	//kubemark.PodListTestV2(nodeNum)
 	kubemark.AbscriptTest()
 	fmt.Println("成功退出")
-	return 0
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()
 	//Request.CreateReplicationController_test("default", "mysql:5.7", "mysql-rpc", "mysql-test", "mysql----test", 2)

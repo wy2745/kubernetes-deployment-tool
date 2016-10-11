@@ -374,7 +374,7 @@ func AbHandler(nodeNum int, replic int, count int) {
 	ab.Abtest(nodeN + "n" + podN + "p", couN)
 }
 
-func CptHandler(nodeNum int) {
+func CptHandler(nodeNum int, count int) {
 	var rate = [6]int{3, 5, 10, 15, 20, 30}
 
 	var clients []http.Client
@@ -384,36 +384,36 @@ func CptHandler(nodeNum int) {
 		clients = append(clients, client)
 	}
 	fmt.Println("node num：", nodeNum)
-	fmt.Println("开始测试")
-	f, _ := os.Create("/home/administrator/test/" + strconv.Itoa(nodeNum) + "n.csv")
+	fmt.Println("开始第", count, "次测试")
+	f, _ := os.Create("/home/administrator/test/" + strconv.Itoa(nodeNum) + "n-" + strconv.Itoa(count) + ".csv")
 	defer f.Close()
 
 	w := csv.NewWriter(f)
 	w.Write([]string{" ", strconv.Itoa(nodeNum * rate[0]) + "C", strconv.Itoa(nodeNum * rate[0]) + "D", strconv.Itoa(nodeNum * rate[1]) + "C", strconv.Itoa(nodeNum * rate[1]) + "D", strconv.Itoa(nodeNum * rate[2]) + "C", strconv.Itoa(nodeNum * rate[2]) + "D", strconv.Itoa(nodeNum * rate[3]) + "C", strconv.Itoa(nodeNum * rate[3]) + "D", strconv.Itoa(nodeNum * rate[4]) + "C", strconv.Itoa(nodeNum * rate[4]) + "D", strconv.Itoa(nodeNum * rate[5]) + "C", strconv.Itoa(nodeNum * rate[5]) + "D"})
 
 	var data [13]int
-	var data1 [13]int
-	var data2 [13]int
+	//var data1 [13]int
+	//var data2 [13]int
 	data[0] = nodeNum
-	data1[0] = nodeNum
-	data2[0] = nodeNum
+	//data1[0] = nodeNum
+	//data2[0] = nodeNum
 	for index, replic := range rate {
 		data[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
 		data[2 * index + 2] = PodDelete(clients)
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
-		data1[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
-		data1[2 * index + 2] = PodDelete(clients)
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
-		data2[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
-		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
-		data2[2 * index + 2] = PodDelete(clients)
-		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
+		//data1[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
+		//fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
+		//data1[2 * index + 2] = PodDelete(clients)
+		//fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
+		//data2[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
+		//fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
+		//data2[2 * index + 2] = PodDelete(clients)
+		//fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
 	}
 	w.Write([]string{strconv.Itoa(data[0]), strconv.Itoa(data[1]), strconv.Itoa(data[2]), strconv.Itoa(data[3]), strconv.Itoa(data[4]), strconv.Itoa(data[5]), strconv.Itoa(data[6]), strconv.Itoa(data[7]), strconv.Itoa(data[8]), strconv.Itoa(data[9]), strconv.Itoa(data[10]), strconv.Itoa(data[11]), strconv.Itoa(data[12])})
-	w.Write([]string{strconv.Itoa(data1[0]), strconv.Itoa(data1[1]), strconv.Itoa(data1[2]), strconv.Itoa(data1[3]), strconv.Itoa(data1[4]), strconv.Itoa(data1[5]), strconv.Itoa(data1[6]), strconv.Itoa(data1[7]), strconv.Itoa(data1[8]), strconv.Itoa(data1[9]), strconv.Itoa(data1[10]), strconv.Itoa(data1[11]), strconv.Itoa(data1[12])})
-	w.Write([]string{strconv.Itoa(data2[0]), strconv.Itoa(data2[1]), strconv.Itoa(data2[2]), strconv.Itoa(data2[3]), strconv.Itoa(data2[4]), strconv.Itoa(data2[5]), strconv.Itoa(data2[6]), strconv.Itoa(data2[7]), strconv.Itoa(data2[8]), strconv.Itoa(data2[9]), strconv.Itoa(data2[10]), strconv.Itoa(data2[11]), strconv.Itoa(data2[12])})
+	//w.Write([]string{strconv.Itoa(data1[0]), strconv.Itoa(data1[1]), strconv.Itoa(data1[2]), strconv.Itoa(data1[3]), strconv.Itoa(data1[4]), strconv.Itoa(data1[5]), strconv.Itoa(data1[6]), strconv.Itoa(data1[7]), strconv.Itoa(data1[8]), strconv.Itoa(data1[9]), strconv.Itoa(data1[10]), strconv.Itoa(data1[11]), strconv.Itoa(data1[12])})
+	//w.Write([]string{strconv.Itoa(data2[0]), strconv.Itoa(data2[1]), strconv.Itoa(data2[2]), strconv.Itoa(data2[3]), strconv.Itoa(data2[4]), strconv.Itoa(data2[5]), strconv.Itoa(data2[6]), strconv.Itoa(data2[7]), strconv.Itoa(data2[8]), strconv.Itoa(data2[9]), strconv.Itoa(data2[10]), strconv.Itoa(data2[11]), strconv.Itoa(data2[12])})
 	w.Flush()
 	if err := w.Error(); err != nil {
 		log.Fatal(err)

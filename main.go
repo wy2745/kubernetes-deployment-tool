@@ -27,7 +27,8 @@ func main() {
 		kubemark.PodCreate(podNum, &client)
 	case "-cpt":
 		nodeNum, _ := strconv.Atoi(os.Args[2])
-		kubemark.CptHandler(nodeNum)
+		count, _ := strconv.Atoi(os.Args[3])
+		kubemark.CptHandler(nodeNum, count)
 	case "-dp":
 		var clients []http.Client
 		for i := 0; i < 4800; i++ {

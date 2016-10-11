@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+sudo ls
+
 ./kubernetes-deployment-tool -dp
 ./kubernetes-deployment-tool -dn
 

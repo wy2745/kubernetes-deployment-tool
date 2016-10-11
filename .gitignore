@@ -27,3 +27,4 @@ _testmain.go
 #visual code
 .vscode
 /kubernetes-deployment-tool.iml
+/kubernetes-deployment-tool

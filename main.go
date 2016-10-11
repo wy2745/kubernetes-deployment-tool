@@ -2,62 +2,24 @@ package main
 
 import (
 	"fmt"
-	//"./ab"
-	//WorkLoadController "./workload"
-	//"./request"
-	//"./locust"
 	"github.com/wy2745/kubernetes-deployment-tool/kubemark"
-	//"github.com/wy2745/kubernetes-deployment-tool/ab"
-	//"bufio"
-	//"os"
 	"strconv"
 	"os"
 )
 
 func main() {
 
-	//Request.GenetatePodBody("default", "mysql:5.7", "mysql----test")
-	//Request.CreatePod_test("default", "mysql:5.7", "mysql----test", "300m", "400m", "1Gi", "2Gi")
-	//Request.GetPodsOfNamespace_Test("default")
-	//Request.CreateService("mysql-service", "mysql----test", "default", 3302, Request.Caicloud)
-	//Request.DeleteService("default", "mysql-service", Request.Caicloud)
-	//Request.DeletePod("default", "test0", Request.Caicloud)
-	//Request.GenerateServiceBody("mysql-service", "mysql----test", "default", 3302)
-	//WorkLoadController.MissionRecorder()
-	//WorkLoadController.Start()
-	//WorkLoadController.StartPodVersion()
-	//Request.GetAllService_Test("default")
-	//fmt.Println(request.GetPodsOfNamespace("default", request.Test))
-	//Request.GetAllService("default", Request.Caicloud)
-	//Request.GetJobOfNamespace("default", Request.Caicloud)
-	//Request.CreateJob("default", "docker.io/zilinglius/workload:short-general", "wsg", int32(5), "400m", "500m", "10Mi", "20Mi", "./home/wsg 200000000", Request.Caicloud)
-	//Request.GetJobOfNamespace("default", Request.Caicloud)
-	//Request.DeleteJob("default", "wsg", Request.Caicloud)
-	//ab.Abtest()
-	//locust.LocustStart()
-	//locust.LocustClose()
-	//locust.FileTest()
-	//kubemark.GenerateReplicationcontrollerBody(10)
-	//kubemark.BuildNode(int32(5))
-	//scanner := bufio.NewScanner(os.Stdin)
-	//scanner.Scan()
-	//scanner.Text()
-	//kubemark.DeleteNode()
-	//ab.Abtest()
-	//kubemark.Test()
-	//kubemark.ShTest()
-	//kubemark.Csvfunc()
-	nodeNum, _ := strconv.Atoi(os.Args[1])
-	kubemark.PodListTestV2(nodeNum)
-	//kubemark.AbscriptTest()
-	//ab.AbtestV2("asd", "1")
-	//kubemark.Test()
-	fmt.Println("成功退出")
-	//Request.DeletePod("default", "mysql----test")
-	//Request.GetAllReplicationcontrollers_Test()
-	//Request.CreateReplicationController_test("default", "mysql:5.7", "mysql-rpc", "mysql-test", "mysql----test", 2)
-	//Request.DeleteReplicationController("default", "mysql-rpc")
-
+	mode := os.Args[1]
+	switch mode {
+	case "-k":
+		nodeNum, _ := strconv.Atoi(os.Args[2])
+		kubemark.PodListTestV2(nodeNum)
+		fmt.Println("成功退出")
+	case "-t":
+		fmt.Println("ok")
+	default:
+		fmt.Println("参数输入错误")
+	}
 
 }
 

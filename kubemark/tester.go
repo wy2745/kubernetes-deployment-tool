@@ -94,6 +94,7 @@ func PodDelete() int {
 				fmt.Print(err)
 			}
 			jsonParse.JsonUnmarsha(body, &v)
+			fmt.Println("还有", len(v.Items), "个pod")
 			if len(v.Items) == 0 {
 				break
 			}

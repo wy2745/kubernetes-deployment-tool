@@ -75,7 +75,7 @@ func PodCreate(replic int32, client *http.Client) int {
 			}
 			if count == replic {
 				endTime := time.Now()
-				time.Sleep(time.Second * 10)
+				//time.Sleep(time.Second * 10)
 				return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 
 			}
@@ -119,12 +119,13 @@ func PodDelete(clients []http.Client) int {
 			jsonParse.JsonUnmarsha(body, &v)
 			//fmt.Println("还有", len(v.Items), "个pod")
 			if len(v.Items) == 0 {
-				time.Sleep(time.Second * 10)
+
 				break
 			}
 		}
 	}
 	endTime := time.Now()
+	//time.Sleep(time.Second * 10)
 	return int((endTime.UnixNano() - startTime.UnixNano()) / unit)
 }
 
@@ -181,7 +182,7 @@ func DeleteNodev2(clients []http.Client) {
 			}
 			jsonParse.JsonUnmarsha(body, &v)
 			if len(v.Items) == 0 {
-				time.Sleep(time.Second * 10)
+				//time.Sleep(time.Second * 10)
 				return
 			}
 		}
@@ -369,14 +370,14 @@ func CnHandler(nodeNum int) {
 	ChangeNode(nodeNum)
 
 	waitallNodeReady(nodeNum, &client)
-	time.Sleep(time.Second * 10)
+	//time.Sleep(time.Second * 10)
 }
 func AbHandler(nodeNum int, replic int, count int) {
 	nodeN := strconv.Itoa(nodeNum)
 	podN := strconv.Itoa(replic * nodeNum)
 	couN := strconv.Itoa(count)
 	ab.Abtest(nodeN + "n" + podN + "p", couN)
-	time.Sleep(time.Second * 10)
+	//time.Sleep(time.Second * 10)
 }
 
 func CptHandler(nodeNum int, count int) {
@@ -424,7 +425,7 @@ func CptHandler(nodeNum int, count int) {
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
 	}
-	time.Sleep(time.Second * 10)
+	//time.Sleep(time.Second * 10)
 }
 
 func ChangeNode(num int) {

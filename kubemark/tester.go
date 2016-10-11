@@ -60,7 +60,6 @@ func PodCreate(replic int32) int {
 }
 
 func PodDelete() int {
-	fmt.Println("开始删除")
 	startTime := time.Now()
 	url := request.KubemarkServer_Test + request.GenerateReplicationControllerNameUrl("default", replicationControllerName)
 	InvokeRequest("DELETE", url, nil)
@@ -78,7 +77,6 @@ func PodDelete() int {
 		for _, pod := range v.Items {
 			if pod.Labels["name"] == replicationControllerName {
 				url = request.KubemarkServer_Test + request.GeneratePodNameUrl("default", pod.Name)
-				fmt.Println(url)
 				InvokeRequest("DELETE", url, nil)
 			}
 		}
@@ -95,7 +93,7 @@ func PodDelete() int {
 				fmt.Print(err)
 			}
 			jsonParse.JsonUnmarsha(body, &v)
-			fmt.Println("还有", len(v.Items), "个pod")
+			//fmt.Println("还有", len(v.Items), "个pod")
 			if len(v.Items) == 0 {
 				break
 			}

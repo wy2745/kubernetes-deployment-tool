@@ -35,8 +35,8 @@ func main() {
 	case "-t":
 		fmt.Println("ok")
 	case "-l":
-		replic, _ := strconv.ParseInt(os.Args[2], 10, 32)
-		autoscale.BuildNginx(replic)
+		replic, _ := strconv.Atoi(os.Args[2])
+		autoscale.BuildNginx(int32(replic))
 		locust.LocustTest(os.Args[3], os.Args[4])
 
 		autoscale.DestoryNginx()

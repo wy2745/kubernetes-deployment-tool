@@ -7,6 +7,7 @@ import (
 	"github.com/wy2745/kubernetes-deployment-tool/locust"
 	"strconv"
 	"os"
+	"net/http"
 )
 
 func main() {
@@ -22,20 +23,31 @@ func main() {
 		nodeNum, _ := strconv.Atoi(os.Args[2])
 		replic, _ := strconv.Atoi(os.Args[3])
 		podNum := int32(nodeNum * replic)
-		kubemark.PodCreate(podNum)
+		client := http.Client{}
+		kubemark.PodCreate(podNum, &client)
 	case "-cpt":
 		nodeNum, _ := strconv.Atoi(os.Args[2])
 		kubemark.CptHandler(nodeNum)
 	case "-dp":
-		kubemark.PodDelete()
+		var clients []http.Client
+		for i := 0; i < 4800; i++ {
+			client := http.Client{}
+			clients = append(clients, client)
+		}
+		kubemark.PodDelete(clients)
 	case "-cn":
 		nodeNum, _ := strconv.Atoi(os.Args[2])
 		kubemark.CnHandler(nodeNum)
 	case "-dn":
-		kubemark.DeleteNodev2()
+		var clients []http.Client
+		for i := 0; i < 320; i++ {
+			client := http.Client{}
+			clients = append(clients, client)
+		}
+		kubemark.DeleteNodev2(clients)
 	case "-k":
-		nodeNum, _ := strconv.Atoi(os.Args[2])
-		kubemark.PodListTestV2(nodeNum)
+		//nodeNum, _ := strconv.Atoi(os.Args[2])
+		//kubemark.PodListTestV2(nodeNum)
 		fmt.Println("成功退出")
 	case "-t":
 		fmt.Println("ok")

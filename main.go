@@ -9,6 +9,8 @@ import (
 	"github.com/wy2745/kubernetes-deployment-tool/kubemark"
 	//"bufio"
 	//"os"
+	"os"
+	"strconv"
 )
 
 func main() {
@@ -41,10 +43,13 @@ func main() {
 	//scanner.Text()
 	//kubemark.DeleteNode()
 	//ab.Abtest()
-	kubemark.Test()
+	//kubemark.Test()
 	//kubemark.ShTest()
 	//kubemark.Csvfunc()
+	nodeNum, _ := strconv.Atoi(os.Args[1])
+	kubemark.PodListTestV2(nodeNum)
 	fmt.Println("成功退出")
+	return 0
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()
 	//Request.CreateReplicationController_test("default", "mysql:5.7", "mysql-rpc", "mysql-test", "mysql----test", 2)

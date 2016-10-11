@@ -168,8 +168,14 @@ func PodListTest(mode int) {
 	if mode == 1 {
 		start = 0
 		stop = 4
-	} else {
+	} else if mode == 2 {
 		start = 4
+		stop = 5
+	} else if mode == 3 {
+		start = 5
+		stop = 6
+	} else {
+		start = 6
 		stop = 7
 	}
 
@@ -271,8 +277,10 @@ func Test() {
 	fmt.Println("1.删除node")
 	fmt.Println("2.删除pod")
 	fmt.Println("3.跑测试(5n-40n)")
-	fmt.Println("4.跑测试(80n-320n)")
-	fmt.Println("5.退出")
+	fmt.Println("4.跑测试(80n)")
+	fmt.Println("5.跑测试(1600n)")
+	fmt.Println("6.跑测试(320n)")
+	fmt.Println("7.退出")
 	for {
 		scanner.Scan()
 		line = scanner.Text()
@@ -286,13 +294,19 @@ func Test() {
 		case "4":
 			PodListTest(2)
 		case "5":
+			PodListTest(3)
+		case "6":
+			PodListTest(4)
+		case "7":
 			return
 		}
 		fmt.Println("1.删除node")
 		fmt.Println("2.删除pod")
 		fmt.Println("3.跑测试(5n-40n)")
-		fmt.Println("4.跑测试(80n-320n)")
-		fmt.Println("5.退出")
+		fmt.Println("4.跑测试(80n)")
+		fmt.Println("5.跑测试(1600n)")
+		fmt.Println("6.跑测试(320n)")
+		fmt.Println("7.退出")
 
 	}
 }

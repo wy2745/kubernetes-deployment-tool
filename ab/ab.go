@@ -26,3 +26,10 @@ func Abtest(name string, count string) {
 	}
 
 }
+func AbtestV2(name string, count string) {
+	csvName := desroot + "record" + name + "-" + count + ".csv"
+	gnpName := desroot + "record" + name + "-" + count + ".gnp"
+	//fmt.Println("~/go/src/github.com/wy2745/kubernetes-deployment-tool/abTest.sh " + csvName + " " + gnpName + " " + tmpurl)
+	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/abTest.sh " + csvName + " " + gnpName + " " + tmpurl)
+	cmd.Output()
+}

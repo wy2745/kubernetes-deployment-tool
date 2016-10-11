@@ -7,6 +7,7 @@ import (
 	//"./request"
 	//"./locust"
 	"github.com/wy2745/kubernetes-deployment-tool/kubemark"
+	//"github.com/wy2745/kubernetes-deployment-tool/ab"
 	//"bufio"
 	//"os"
 )
@@ -46,7 +47,9 @@ func main() {
 	//kubemark.Csvfunc()
 	//nodeNum, _ := strconv.Atoi(os.Args[1])
 	//kubemark.PodListTestV2(nodeNum)
-	kubemark.AbscriptTest()
+	//kubemark.AbscriptTest()
+	//ab.AbtestV2("asd", "1")
+	kubemark.PodListTest()
 	fmt.Println("成功退出")
 	//Request.DeletePod("default", "mysql----test")
 	//Request.GetAllReplicationcontrollers_Test()

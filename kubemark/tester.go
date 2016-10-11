@@ -161,28 +161,12 @@ func DeleteNodev2() {
 	}
 }
 
-func PodListTest(mode int) {
+func PodListTest() {
 
 	podDelete()
 
-	var start int
-	var stop int
-	if mode == 1 {
-		start = 0
-		stop = 4
-	} else if mode == 2 {
-		start = 4
-		stop = 5
-	} else if mode == 3 {
-		start = 5
-		stop = 6
-	} else {
-		start = 6
-		stop = 7
-	}
-
 	var nodenum = [7]int{5, 10, 20, 40, 80, 160, 320}
-	for i := start; i < stop; i++ {
+	for i := 0; i < 7; i++ {
 
 		nodeNum := nodenum[i]
 		changeNode(nodeNum)
@@ -210,19 +194,22 @@ func PodListTest(mode int) {
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
 			nodeN := strconv.Itoa(nodeNum)
 			podN := strconv.Itoa(replic * nodeNum)
-			ab.Abtest(nodeN + "n" + podN + "p", "1")
+			//ab.Abtest(nodeN + "n" + podN + "p", "1")
+			ab.AbtestV2(nodeN + "n" + podN + "p", "1")
 			time.Sleep(time.Second * 3)
 			data[2 * index + 2] = podDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 			data1[2 * index + 1] = podCreate(int32(replic * nodeNum))
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")
-			ab.Abtest(nodeN + "n" + podN + "p", "1")
+			//ab.Abtest(nodeN + "n" + podN + "p", "1")
+			ab.AbtestV2(nodeN + "n" + podN + "p", "1")
 			time.Sleep(time.Second * 3)
 			data1[2 * index + 2] = podDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data1[2 * index + 2], "ms")
 			data2[2 * index + 1] = podCreate(int32(replic * nodeNum))
 			fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data2[2 * index + 1], "ms")
-			ab.Abtest(nodeN + "n" + podN + "p", "1")
+			//ab.Abtest(nodeN + "n" + podN + "p", "1")
+			ab.AbtestV2(nodeN + "n" + podN + "p", "1")
 			time.Sleep(time.Second * 10)
 			data2[2 * index + 2] = podDelete()
 			fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data2[2 * index + 2], "ms")
@@ -356,10 +343,10 @@ func changeNode(num int) {
 	cmd.Output()
 }
 
-func AbscriptTest() {
-	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/abTest.sh /home/administrator/test/ab/abc.csv /home/administrator/test/ab/abc.gnp http://www.baidu.com/")
-	cmd.Output()
-}
+//func AbscriptTest() {
+//	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/abTest.sh /home/administrator/test/ab/abc.csv /home/administrator/test/ab/abc.gnp http://www.baidu.com/")
+//	cmd.Output()
+//}
 
 func Test() {
 	var line string

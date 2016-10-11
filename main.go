@@ -13,6 +13,11 @@ func main() {
 
 	mode := os.Args[1]
 	switch mode {
+	case "-ab":
+		nodeNum, _ := strconv.Atoi(os.Args[2])
+		replic, _ := strconv.Atoi(os.Args[3])
+		count, _ := strconv.Atoi(os.Args[4])
+		kubemark.AbHandler(nodeNum, replic, count)
 	case "-cp":
 		nodeNum, _ := strconv.Atoi(os.Args[2])
 		replic, _ := strconv.Atoi(os.Args[3])

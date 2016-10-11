@@ -341,7 +341,7 @@ func CnHandler(nodeNum int) {
 	ChangeNode(nodeNum)
 
 	waitallNodeReady(nodeNum)
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 5)
 }
 func AbHandler(nodeNum int, replic int, count int) {
 	nodeN := strconv.Itoa(nodeNum)

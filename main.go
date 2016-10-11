@@ -23,7 +23,8 @@ func main() {
 		nodeNum, _ := strconv.Atoi(os.Args[2])
 		replic, _ := strconv.Atoi(os.Args[3])
 		podNum := int32(nodeNum * replic)
-		client := http.Client{}
+		tr := http.Transport{DisableKeepAlives:false}
+		client := http.Client{Transport:&tr}
 		kubemark.PodCreate(podNum, &client)
 	case "-cpt":
 		nodeNum, _ := strconv.Atoi(os.Args[2])
@@ -32,7 +33,8 @@ func main() {
 	case "-dp":
 		var clients []http.Client
 		for i := 0; i < 4800; i++ {
-			client := http.Client{}
+			tr := http.Transport{DisableKeepAlives:false}
+			client := http.Client{Transport:&tr}
 			clients = append(clients, client)
 		}
 		kubemark.PodDelete(clients)
@@ -42,7 +44,8 @@ func main() {
 	case "-dn":
 		var clients []http.Client
 		for i := 0; i < 320; i++ {
-			client := http.Client{}
+			tr := http.Transport{DisableKeepAlives:false}
+			client := http.Client{Transport:&tr}
 			clients = append(clients, client)
 		}
 		kubemark.DeleteNodev2(clients)

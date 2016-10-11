@@ -356,6 +356,11 @@ func changeNode(num int) {
 	cmd.Output()
 }
 
+func AbscriptTest() {
+	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/abTest.sh /home/administrator/test/ab/abc.csv /home/administrator/test/ab/abc.gnp http://www.baidu.com/")
+	cmd.Output()
+}
+
 func Test() {
 	var line string
 	scanner := bufio.NewScanner(os.Stdin)

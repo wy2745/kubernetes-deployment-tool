@@ -5,10 +5,70 @@ import (
 	"github.com/wy2745/kubernetes-deployment-tool/json"
 	classType "github.com/wy2745/kubernetes-deployment-tool/type137"
 	"fmt"
+	"io/ioutil"
 )
 
 func BuildNginx() {
 	url := kubemark.DestinationServer_Test + kubemark.GenerateReplicationControllerNamespaceUrl("default")
+	fmt.Println(url)
+	body := generateNginxReplic(int32(3))
+	fmt.Println(string(body))
+	resp := kubemark.InvokeRequest("POST", url, body)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.ReplicationController
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		fmt.Println(v)
+	}
+
+	url = kubemark.DestinationServer_Test + kubemark.GenerateServiceListNamespaceUrl("default")
+	fmt.Println(url)
+	body = generateNginxsvc()
+	fmt.Println(string(body))
+	resp = kubemark.InvokeRequest("POST", url, body)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.Service
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		fmt.Println(v)
+	}
+
+}
+
+func DestoryNginx() {
+	replicName := "nginx"
+	svcName := "nginx-svc"
+	url := kubemark.DestinationServer_Test + kubemark.GenerateServiceListNameUrl("default", svcName)
+	kubemark.InvokeRequest("DELETE", url, nil)
+
+	url = kubemark.DestinationServer_Test + kubemark.GenerateReplicationControllerNameUrl("default", replicName)
+	kubemark.InvokeRequest("DELETE", url, nil)
+
+	url = kubemark.DestinationServer_Test + kubemark.GeneratePodNamespaceUrl("default")
+	resp := kubemark.InvokeRequest("GET", url, nil)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.PodList
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		for _, pod := range v.Items {
+			if pod.Labels["name"] == replicName {
+				url = kubemark.DestinationServer_Test + kubemark.GeneratePodNameUrl("default", pod.Name)
+				kubemark.InvokeRequest("DELETE", url, nil)
+			}
+		}
+	}
 }
 
 func generateNginxReplic(replic int32) []byte {
@@ -35,19 +95,23 @@ func generateNginxReplic(replic int32) []byte {
 
 	//volumns
 	var volumn classType.Volume
+	var secret classType.SecretVolumeSource
+	secret.SecretName = "nginxsecret"
 	volumn.Name = "secret-volume"
-	volumn.Secret.SecretName = "nginxsecret"
+	volumn.Secret = &secret
 	var volumn2 classType.Volume
+	var configmap classType.ConfigMapVolumeSource
+	configmap.Name = "nginxconfigmap"
 	volumn2.Name = "configmap-volume"
-	volumn2.Secret.SecretName = "nginxconfigmap"
+	volumn2.ConfigMap = &configmap
 	vslice := []classType.Volume{volumn, volumn2}
 
 	//生成PodTemplateSpec.container
 	var Ports []classType.ContainerPort
 	var port classType.ContainerPort
-	port.ContainerPort = 443
+	port.ContainerPort = int32(443)
 	Ports = append(Ports, port)
-	port.ContainerPort = 80
+	port.ContainerPort = int32(80)
 	Ports = append(Ports, port)
 
 	var volumnMount classType.VolumeMount
@@ -61,7 +125,7 @@ func generateNginxReplic(replic int32) []byte {
 	var probe classType.Probe
 	var httpgetaction classType.HTTPGetAction
 	httpgetaction.Path = "/index.html"
-	httpgetaction.Port.IntVal = 80
+	httpgetaction.Port = int32(80)
 	probe.Handler.HTTPGet = &httpgetaction
 	probe.InitialDelaySeconds = int32(30)
 	probe.TimeoutSeconds = int32(1)
@@ -94,7 +158,7 @@ func generateNginxReplic(replic int32) []byte {
 	replicationController.Spec = replicationControllerSpec
 	replicationController.ObjectMeta = objectMedata
 	replicationController.TypeMeta = typeMedata
-	replicationController.Status.Replicas = replic
+	//replicationController.Status.Replicas = replic
 
 	b := jsonParse.JsonMarsha(replicationController)
 	fmt.Print(string(b))
@@ -117,11 +181,13 @@ func generateNginxsvc() []byte {
 
 	//生成Service spec
 	var servicePort classType.ServicePort
+	servicePort.Name = "http"
 	servicePort.Port = int32(80)
-	servicePort.NodePort = int32(10080)
+	servicePort.NodePort = int32(30080)
 	var servicePort2 classType.ServicePort
+	servicePort2.Name = "https"
 	servicePort2.Port = int32(443)
-	servicePort2.NodePort = int32(10443)
+	servicePort2.NodePort = int32(30443)
 	slice := []classType.ServicePort{servicePort, servicePort2}
 	var serviceSpec classType.ServiceSpec
 	serviceSpec.Selector = make(map[string]string)

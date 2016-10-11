@@ -9,8 +9,9 @@ const (
 	node string = "http://192.168.6.15"
 	port string = "8080"
 	getfile string = "api/v1/pods"
+	getfile2 string = "api/v1/nodes"
 	desroot string = "/home/administrator/test/ab/"
-	tmpurl string = node + ":" + port + "/" + getfile
+	tmpurl string = node + ":" + port + "/" + getfile2
 )
 
 func Abtest(name string, count string) {

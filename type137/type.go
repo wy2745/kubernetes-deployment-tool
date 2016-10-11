@@ -230,7 +230,7 @@ type VolumeSource struct {
 
 	GitRepo               *GitRepoVolumeSource `json:"gitRepo,omitempty"`
 
-	Secret                SecretVolumeSource `json:"secret,omitempty"`
+	Secret                *SecretVolumeSource `json:"secret,omitempty"`
 
 	NFS                   *NFSVolumeSource `json:"nfs,omitempty"`
 
@@ -604,7 +604,7 @@ type IntOrString struct {
 
 type HTTPGetAction struct {
 	Path        string `json:"path,omitempty"`
-	Port        IntOrString `json:"port"`
+	Port        int32 `json:"port"`
 	Host        string `json:"host,omitempty"`
 	Scheme      URIScheme `json:"scheme,omitempty"`
 	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`

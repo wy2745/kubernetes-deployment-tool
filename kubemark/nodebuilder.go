@@ -66,6 +66,9 @@ func GenerateServiceListNameUrl(namespace string, name string) string {
 func GenerateReplicationControllerNamespaceUrl(namespace string) string {
 	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers"
 }
+func GenerateReplicationControllerNameUrl(namespace string, name string) string {
+	return GetNamespaces_GET + "/" + namespace + "/replicationcontrollers" + "/" + name
+}
 func GenerateNodeNameUrl(name string) string {
 	return CreateNode_POST + "/" + name
 }
@@ -84,9 +87,9 @@ func InvokeRequest(method string, url string, body []byte) *http.Response {
 		req.Header.Set("Content-Type", "application/json")
 	}
 	resp, err := client.Do(req)
-	//fmt.Println(resp.Header)
-	//fmt.Println(resp.Status)
-	//fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header)
+	fmt.Println(resp.Status)
+	fmt.Println(resp.StatusCode)
 	if err != nil {
 		fmt.Print(err)
 	}

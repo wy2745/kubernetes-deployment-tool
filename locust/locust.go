@@ -23,7 +23,7 @@ const (
 	destination string = "http://120.26.120.30:30888"
 	nodePortUrl string = "192.168.6.22:30080"
 	apiProxyUrl string = "http://192.168.6.10:8080/api/v1/proxy/namespaces/default/services/nginx-svc:80"
-	destinationUrl string = "http://192.168.6.10:8080"
+	apiserviceUrl string = "http://192.168.6.10:8080"
 
 	fileroot string = "/Users/panda/Documents/github/locustfile.py"
 	//本地启动的指令，以后可能会使用master-slave模式
@@ -52,7 +52,7 @@ func generateExceptionsName(fileName string) string {
 	return destinationRoot + "exceptions" + fileName + ".csv"
 }
 func getReplic() int {
-	url := destinationUrl + kubemark.GenerateReplicationControllerNameUrl("default", "nginx")
+	url := apiserviceUrl + kubemark.GenerateReplicationControllerNameUrl("default", "nginx")
 	tr := http.Transport{DisableKeepAlives:false}
 	client := http.Client{Transport:&tr}
 	resp := kubemark.InvokeRequestV2("GET", url, nil, &client)

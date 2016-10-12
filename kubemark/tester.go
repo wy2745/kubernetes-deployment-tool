@@ -83,7 +83,7 @@ func PodCreate(replic int32, client *http.Client) int {
 	}
 }
 
-func PodDelete(clients []http.Client) int {
+func PodDelete(client *http.Client) int {
 	startTime := time.Now()
 	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/deletePod.sh ")
 	cmd.Output()
@@ -111,7 +111,7 @@ func PodDelete(clients []http.Client) int {
 
 	for {
 		url := request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
-		resp := InvokeRequestV2("GET", url, nil, &(clients[0]))
+		resp := InvokeRequestV2("GET", url, nil, client)
 		if (resp != nil) {
 			defer resp.Body.Close()
 			var v classType.PodList
@@ -386,13 +386,9 @@ func AbHandler(nodeNum int, replic int, count int) {
 func CptHandler(nodeNum int, count int) {
 	var rate = [6]int{3, 5, 10, 15, 20, 30}
 
-	var clients []http.Client
-	maxClient := rate[5] * nodeNum
-	for i := 0; i < maxClient; i++ {
-		tr := http.Transport{DisableKeepAlives:false}
-		client := http.Client{Transport:&tr}
-		clients = append(clients, client)
-	}
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
+
 	fmt.Println("node num：", nodeNum)
 	fmt.Println("开始第", count, "次测试")
 	f, _ := os.Create("/home/administrator/test/" + strconv.Itoa(nodeNum) + "n-" + strconv.Itoa(count) + ".csv")
@@ -408,9 +404,9 @@ func CptHandler(nodeNum int, count int) {
 	//data1[0] = nodeNum
 	//data2[0] = nodeNum
 	for index, replic := range rate {
-		data[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
+		data[2 * index + 1] = PodCreate(int32(replic * nodeNum), &client)
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		data[2 * index + 2] = PodDelete(clients)
+		data[2 * index + 2] = PodDelete(client)
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 		//data1[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
 		//fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")

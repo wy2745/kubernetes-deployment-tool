@@ -32,13 +32,9 @@ func main() {
 		count, _ := strconv.Atoi(os.Args[3])
 		kubemark.CptHandler(nodeNum, count)
 	case "-dp":
-		var clients []http.Client
-		for i := 0; i < 4800; i++ {
-			tr := http.Transport{DisableKeepAlives:false}
-			client := http.Client{Transport:&tr}
-			clients = append(clients, client)
-		}
-		kubemark.PodDelete(clients)
+		tr := http.Transport{DisableKeepAlives:false}
+		client := http.Client{Transport:&tr}
+		kubemark.PodDelete(&client)
 	case "-cn":
 		nodeNum, _ := strconv.Atoi(os.Args[2])
 		kubemark.CnHandler(nodeNum)

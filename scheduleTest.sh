@@ -25,8 +25,8 @@ do
         for count in 1 2 3
             do
                 ./kubernetes-deployment-tool -ab ${nodenum} ${replic} ${count}
-                ./kubernetes-deployment-tool -t
                 done
+        ./kubernetes-deployment-tool -t
         echo "在${nodenum}个node上创建${nodenum}删除${replic}倍pod..."
         ./kubernetes-deployment-tool -dp
         ./kubernetes-deployment-tool -t

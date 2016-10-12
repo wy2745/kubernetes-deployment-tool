@@ -14,6 +14,7 @@ const (
 	password string = "FlbY3CD6mcFUfZvb"
 
 	DestinationServer_Test string = "http://202.120.40.178:1080"
+	DestinationServer_Test2 string = "http://192.168.6.10:8080"
 	destinationServer_Test string = "http://202.120.40.177:16380"
 	kubemarkServer_Test string = "http://202.120.40.177:17080"
 	destinationServer_Caicloud string = "https://sjtu.caicloudapp.com"

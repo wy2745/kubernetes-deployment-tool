@@ -10,7 +10,7 @@ import (
 )
 
 func BuildNginx(num int32) {
-	url := kubemark.DestinationServer_Test + kubemark.GenerateReplicationControllerNamespaceUrl("default")
+	url := kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNamespaceUrl("default")
 	fmt.Println(url)
 	body := generateNginxReplic(num)
 	fmt.Println(string(body))
@@ -26,7 +26,7 @@ func BuildNginx(num int32) {
 		fmt.Println(v)
 	}
 
-	url = kubemark.DestinationServer_Test + kubemark.GenerateServiceListNamespaceUrl("default")
+	url = kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNamespaceUrl("default")
 	fmt.Println(url)
 	body = generateNginxsvc()
 	fmt.Println(string(body))
@@ -44,7 +44,7 @@ func BuildNginx(num int32) {
 
 	for {
 		count := int32(0)
-		url := kubemark.DestinationServer_Test + kubemark.GeneratePodNamespaceUrl("default")
+		url := kubemark.DestinationServer_Test2 + kubemark.GeneratePodNamespaceUrl("default")
 		resp := kubemark.InvokeRequest("GET", url, nil)
 		if (resp != nil) {
 			defer resp.Body.Close()
@@ -76,13 +76,13 @@ func BuildNginx(num int32) {
 func DestoryNginx() {
 	replicName := "nginx"
 	svcName := "nginx-svc"
-	url := kubemark.DestinationServer_Test + kubemark.GenerateServiceListNameUrl("default", svcName)
+	url := kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNameUrl("default", svcName)
 	kubemark.InvokeRequest("DELETE", url, nil)
 
-	url = kubemark.DestinationServer_Test + kubemark.GenerateReplicationControllerNameUrl("default", replicName)
+	url = kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNameUrl("default", replicName)
 	kubemark.InvokeRequest("DELETE", url, nil)
 
-	url = kubemark.DestinationServer_Test + kubemark.GeneratePodNamespaceUrl("default")
+	url = kubemark.DestinationServer_Test2 + kubemark.GeneratePodNamespaceUrl("default")
 	resp := kubemark.InvokeRequest("GET", url, nil)
 	if (resp != nil) {
 		defer resp.Body.Close()
@@ -94,7 +94,7 @@ func DestoryNginx() {
 		jsonParse.JsonUnmarsha(body, &v)
 		for _, pod := range v.Items {
 			if pod.Labels["name"] == replicName {
-				url = kubemark.DestinationServer_Test + kubemark.GeneratePodNameUrl("default", pod.Name)
+				url = kubemark.DestinationServer_Test2 + kubemark.GeneratePodNameUrl("default", pod.Name)
 				kubemark.InvokeRequest("DELETE", url, nil)
 			}
 		}

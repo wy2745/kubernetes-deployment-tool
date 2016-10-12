@@ -5,7 +5,7 @@ sudo sysctl -w net.ipv4.tcp_fin_timeout=5
 ./kubernetes-deployment-tool -dp
 ./kubernetes-deployment-tool -dn
 
-for nodenum in 5 10 20 40 80 160 320
+for nodenum in 320 160 80 40 20 10 5
 do
     echo "创建${nodenum}个node..."
     ./kubernetes-deployment-tool -cn ${nodenum}

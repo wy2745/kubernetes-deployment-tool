@@ -11,12 +11,19 @@ import (
 	"io"
 	"time"
 	"strconv"
+	"github.com/wy2745/kubernetes-deployment-tool/kubemark"
+	"github.com/wy2745/kubernetes-deployment-tool/json"
+	classType "github.com/wy2745/kubernetes-deployment-tool/type137"
+	"io/ioutil"
+	"encoding/csv"
+	"log"
 )
 
 const (
 	destination string = "http://120.26.120.30:30888"
 	nodePortUrl string = "192.168.6.22:30080"
 	apiProxyUrl string = "http://192.168.6.10:8080/api/v1/proxy/namespaces/default/services/nginx-svc:80"
+	destinationUrl string = "http://192.168.6.10:8080"
 
 	fileroot string = "/Users/panda/Documents/github/locustfile.py"
 	//本地启动的指令，以后可能会使用master-slave模式
@@ -43,6 +50,23 @@ func generateDistributionName(fileName string) string {
 }
 func generateExceptionsName(fileName string) string {
 	return destinationRoot + "exceptions" + fileName + ".csv"
+}
+func getReplic() int {
+	url := destinationUrl + kubemark.GenerateReplicationControllerNameUrl("default", "nginx")
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
+	resp := kubemark.InvokeRequestV2("GET", url, nil, &client)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.ReplicationController
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		return v.Status.Replicas
+	}
+	return 0
 }
 
 func Locust(scanner *bufio.Scanner) {
@@ -214,6 +238,9 @@ func LocustTest(locust_count string, hatch_rate string) {
 	LocustTestStop()
 	time.Sleep(time.Second * 60)
 	fmt.Println("准备启动测试")
+
+	startReplic := getReplic()
+
 	scanner := bufio.NewScanner(os.Stdin)
 	client := http.Client{}
 	fmt.Println(swarmBody(locust_count, hatch_rate))
@@ -225,7 +252,20 @@ func LocustTest(locust_count string, hatch_rate string) {
 	fmt.Println("输入任意字符结束")
 	scanner.Scan()
 	scanner.Text()
+	endReplic := getReplic()
 	LocustTestStop()
+
+	f, _ := os.Create("/home/administrator/test/locust/replic/" + locust_count + "C" + hatch_rate + "H.csv")
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	w.Write([]string{"replic-start", "replic-end"})
+	w.Write([]string{strconv.Itoa(startReplic), strconv.Itoa(endReplic)})
+
+	w.Flush()
+	if err := w.Error(); err != nil {
+		log.Fatal(err)
+	}
 	fileTestV2(locust_count + "C" + hatch_rate + "H")
 
 }

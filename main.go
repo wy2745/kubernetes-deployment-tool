@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/wy2745/kubernetes-deployment-tool/kubemark"
 	"github.com/wy2745/kubernetes-deployment-tool/autoscale"
-	"github.com/wy2745/kubernetes-deployment-tool/locust"
 	"strconv"
 	"os"
 	"net/http"
 	"time"
+	"github.com/wy2745/kubernetes-deployment-tool/locust"
+	"bufio"
 )
 
 func main() {
@@ -55,8 +56,11 @@ func main() {
 		time.Sleep(time.Second * time.Duration(ti))
 		fmt.Println("ok")
 	case "-l":
+		scanner := bufio.NewScanner(os.Stdin)
 		replic, _ := strconv.Atoi(os.Args[2])
 		autoscale.BuildNginx(int32(replic))
+		scanner.Scan()
+		scanner.Text()
 		locust.LocustTest(os.Args[3], os.Args[4])
 
 		autoscale.DestoryNginx()

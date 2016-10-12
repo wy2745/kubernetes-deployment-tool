@@ -6,6 +6,7 @@ import (
 	classType "github.com/wy2745/kubernetes-deployment-tool/type137"
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 )
 
 func BuildNginx(num int32) {
@@ -68,6 +69,8 @@ func BuildNginx(num int32) {
 			return
 		}
 	}
+	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/autoscale.sh")
+	cmd.Output()
 }
 
 func DestoryNginx() {

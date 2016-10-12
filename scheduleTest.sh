@@ -11,10 +11,11 @@ do
     ./kubernetes-deployment-tool -cn ${nodenum}
     echo "创建成功"
     echo "进行${nodenum}个node的pod创建删除时间实验..."
+    ./kubernetes-deployment-tool -t 3
     for cnt in 1 2 3
         do
             ./kubernetes-deployment-tool -cpt ${nodenum} ${cnt}
-            ./kubernetes-deployment-tool -t
+            ./kubernetes-deployment-tool -t 60
     done
 
     for replic in 3 5 10 15 20 30
@@ -26,10 +27,10 @@ do
             do
                 ./kubernetes-deployment-tool -ab ${nodenum} ${replic} ${count}
                 done
-        ./kubernetes-deployment-tool -t
+        ./kubernetes-deployment-tool -t 60
         echo "在${nodenum}个node上创建${nodenum}删除${replic}倍pod..."
         ./kubernetes-deployment-tool -dp
-        ./kubernetes-deployment-tool -t
+        ./kubernetes-deployment-tool -t 60
         echo "在${nodenum}个node上创建${nodenum}删除${replic}倍pod成功..."
         done
     echo "删除${nodenum}个node..."

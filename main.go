@@ -51,7 +51,8 @@ func main() {
 		//kubemark.PodListTestV2(nodeNum)
 		fmt.Println("成功退出")
 	case "-t":
-		time.Sleep(time.Second * 60)
+		ti, _ := strconv.Atoi(os.Args[2])
+		time.Sleep(time.Second * ti)
 		fmt.Println("ok")
 	case "-l":
 		replic, _ := strconv.Atoi(os.Args[2])

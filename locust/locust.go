@@ -15,6 +15,9 @@ import (
 
 const (
 	destination string = "http://120.26.120.30:30888"
+	nodePortUrl string = "192.168.6.22:30080"
+	apiProxyUrl string = "http://192.168.6.10:8080/api/v1/proxy/namespaces/default/services/nginx-svc:80"
+
 	fileroot string = "/Users/panda/Documents/github/locustfile.py"
 	//本地启动的指令，以后可能会使用master-slave模式
 	startcommand string = "locust -f " + fileroot + " --host=" + destination
@@ -209,6 +212,8 @@ func LocustParaSet(scanner *bufio.Scanner) {
 
 func LocustTest(locust_count string, hatch_rate string) {
 	LocustTestStop()
+	time.Sleep(time.Second * 60)
+	fmt.Println("准备启动测试")
 	scanner := bufio.NewScanner(os.Stdin)
 	client := http.Client{}
 	fmt.Println(swarmBody(locust_count, hatch_rate))
@@ -216,6 +221,7 @@ func LocustTest(locust_count string, hatch_rate string) {
 	req, _ := http.NewRequest("POST", startTestUrl, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
+	fmt.Println("测试启动")
 	fmt.Println("输入任意字符结束")
 	scanner.Scan()
 	scanner.Text()

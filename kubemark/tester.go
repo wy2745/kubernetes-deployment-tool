@@ -85,30 +85,33 @@ func PodCreate(replic int32, client *http.Client) int {
 
 func PodDelete(clients []http.Client) int {
 	startTime := time.Now()
-	url := request.KubemarkServer_Test + request.GenerateReplicationControllerNameUrl("default", replicationControllerName)
-	InvokeRequestV2("DELETE", url, nil, &(clients[0]))
+	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/deletePod.sh ")
+	cmd.Output()
 
-	url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
-	resp := InvokeRequestV2("GET", url, nil, &(clients[0]))
-	if (resp != nil) {
-		defer resp.Body.Close()
-		var v classType.PodList
-		body, err := ioutil.ReadAll(resp.Body)
-		if (err != nil) {
-			fmt.Print(err)
-		}
-		jsonParse.JsonUnmarsha(body, &v)
-		for index, pod := range v.Items {
-			if pod.Labels["name"] == replicationControllerName {
-				url = request.KubemarkServer_Test + request.GeneratePodNameUrl("default", pod.Name)
-				InvokeRequestV2("DELETE", url, nil, &(clients[index]))
-			}
-		}
-	}
+	//url := request.KubemarkServer_Test + request.GenerateReplicationControllerNameUrl("default", replicationControllerName)
+	//InvokeRequestV2("DELETE", url, nil, &(clients[0]))
+	//
+	//url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
+	//resp := InvokeRequestV2("GET", url, nil, &(clients[0]))
+	//if (resp != nil) {
+	//	defer resp.Body.Close()
+	//	var v classType.PodList
+	//	body, err := ioutil.ReadAll(resp.Body)
+	//	if (err != nil) {
+	//		fmt.Print(err)
+	//	}
+	//	jsonParse.JsonUnmarsha(body, &v)
+	//	for index, pod := range v.Items {
+	//		if pod.Labels["name"] == replicationControllerName {
+	//			url = request.KubemarkServer_Test + request.GeneratePodNameUrl("default", pod.Name)
+	//			InvokeRequestV2("DELETE", url, nil, &(clients[index]))
+	//		}
+	//	}
+	//}
 
 	for {
-		url = request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
-		resp = InvokeRequestV2("GET", url, nil, &(clients[0]))
+		url := request.KubemarkServer_Test + request.GeneratePodNamespaceUrl("default")
+		resp := InvokeRequestV2("GET", url, nil, &(clients[0]))
 		if (resp != nil) {
 			defer resp.Body.Close()
 			var v classType.PodList

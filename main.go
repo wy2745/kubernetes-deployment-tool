@@ -52,7 +52,7 @@ func main() {
 		fmt.Println("成功退出")
 	case "-t":
 		ti, _ := strconv.Atoi(os.Args[2])
-		time.Sleep(time.Second * int64(ti))
+		time.Sleep(time.Second * time.Duration(ti))
 		fmt.Println("ok")
 	case "-l":
 		replic, _ := strconv.Atoi(os.Args[2])

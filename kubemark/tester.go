@@ -406,7 +406,7 @@ func CptHandler(nodeNum int, count int) {
 	for index, replic := range rate {
 		data[2 * index + 1] = PodCreate(int32(replic * nodeNum), &client)
 		fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data[2 * index + 1], "ms")
-		data[2 * index + 2] = PodDelete(client)
+		data[2 * index + 2] = PodDelete(&client)
 		fmt.Println("在", nodeNum, "个node上删除", replic * nodeNum, "个pod 使用了", data[2 * index + 2], "ms")
 		//data1[2 * index + 1] = PodCreate(int32(replic * nodeNum), &(clients[0]))
 		//fmt.Println("在", nodeNum, "个node上创建", replic * nodeNum, "个pod 使用了", data1[2 * index + 1], "ms")

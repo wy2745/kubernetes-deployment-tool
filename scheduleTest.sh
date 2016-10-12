@@ -11,7 +11,7 @@ do
     ./kubernetes-deployment-tool -cn ${nodenum}
     echo "创建成功"
     echo "进行${nodenum}个node的pod创建删除时间实验..."
-    ./kubernetes-deployment-tool -t 3
+    ./kubernetes-deployment-tool -t 10
     for cnt in 1 2 3
         do
             ./kubernetes-deployment-tool -cpt ${nodenum} ${cnt}

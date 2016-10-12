@@ -64,7 +64,7 @@ func getReplic() int {
 			fmt.Print(err)
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		return v.Status.Replicas
+		return int(v.Status.Replicas)
 	}
 	return 0
 }

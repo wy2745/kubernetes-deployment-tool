@@ -34,6 +34,7 @@ const (
 	locust_count string = "locust_count"
 	hatch_rate string = "hatch_rate"
 	requestsUrl string = destinationUrl + "/stats/requests/csv"
+	requestStatUrl string = destinationUrl + "/stats/requests"
 	distributionUrl string = destinationUrl + "/stats/distribution/csv"
 	exceptionsUrl string = destinationUrl + "/exceptions/csv"
 	destinationRoot string = "/home/administrator/test/locust/"
@@ -234,6 +235,22 @@ func LocustParaSet(scanner *bufio.Scanner) {
 	}()
 }
 
+func GetUserName() {
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
+	req, _ := http.NewRequest("GET", requestStatUrl, nil)
+	resp, _ := client.Do(req)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		fmt.Println(string(body))
+	}
+
+}
+
 func LocustTest(locust_count string, hatch_rate string) {
 	LocustTestStop()
 	time.Sleep(time.Second * 60)
@@ -241,17 +258,15 @@ func LocustTest(locust_count string, hatch_rate string) {
 
 	startReplic := getReplic()
 
-	scanner := bufio.NewScanner(os.Stdin)
-	client := http.Client{}
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
 	fmt.Println(swarmBody(locust_count, hatch_rate))
 	body := []byte(swarmBody(locust_count, hatch_rate))
 	req, _ := http.NewRequest("POST", startTestUrl, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
 	fmt.Println("测试启动")
-	fmt.Println("输入任意字符结束")
-	scanner.Scan()
-	scanner.Text()
+	fmt.Println("测试将持续60s")
 	endReplic := getReplic()
 	LocustTestStop()
 

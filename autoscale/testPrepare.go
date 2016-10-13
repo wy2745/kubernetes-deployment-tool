@@ -13,9 +13,9 @@ import (
 
 func BuildNginx(num int32) {
 	url := kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNamespaceUrl("default")
-	fmt.Println(url)
+	//fmt.Println(url)
 	body := generateNginxReplic(num)
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 	resp := kubemark.InvokeRequest("POST", url, body)
 	if (resp != nil) {
 		defer resp.Body.Close()
@@ -25,13 +25,13 @@ func BuildNginx(num int32) {
 			fmt.Print(err)
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		fmt.Println(v)
+		//fmt.Println(v)
 	}
 
 	url = kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNamespaceUrl("default")
 	fmt.Println(url)
 	body = generateNginxsvc()
-	fmt.Println(string(body))
+	//fmt.Println(string(body))
 	resp = kubemark.InvokeRequest("POST", url, body)
 	if (resp != nil) {
 		defer resp.Body.Close()
@@ -41,7 +41,7 @@ func BuildNginx(num int32) {
 			fmt.Print(err)
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		fmt.Println(v)
+		//fmt.Println(v)
 	}
 
 	for {

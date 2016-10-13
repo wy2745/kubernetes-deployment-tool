@@ -248,7 +248,7 @@ func GetUserName() {
 			fmt.Print(err)
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		fmt.Println(string(body))
+		fmt.Println(string(v))
 	}
 
 }

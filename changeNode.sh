@@ -10,8 +10,8 @@ echo "haha"
 
 ssh ${IP} "cd /home/administrator/resources/ && ${kubectl} delete rc hollow-node --namespace=kubemark"
 
-while [[ ! -z "$(${kubectl} get pods --show-all --namespace=kubemark| tail -n +1)" ]]; do
-    sleep 5
-  done
+ssh ${IP} "while [[ ! -z "$(${kubectl} get pods --show-all --namespace=kubemark| tail -n +1)" ]]; do
+                sleep 5
+           done"
 ssh ${IP} "${kubectl} create -f /home/administrator/resources/hollow-node${nodenum}.json --namespace=kubemark"
 

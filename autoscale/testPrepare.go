@@ -229,7 +229,7 @@ func generateNginxReplic(replic int32) []byte {
 	//replicationController.Status.Replicas = replic
 
 	b := jsonParse.JsonMarsha(replicationController)
-	fmt.Print(string(b))
+	//fmt.Print(string(b))
 	return b
 }
 

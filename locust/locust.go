@@ -267,7 +267,7 @@ func LocustTest(locust_count string, hatch_rate string) {
 	req, _ := http.NewRequest("POST", startTestUrl, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
-	fmt.Println("测试启动")
+	fmt.Println("测试启动,参数:", locust_count + "个user" + hatch_rate + "个并发")
 	usercount, _ := strconv.Atoi(locust_count)
 	for {
 		if getUserNum() == usercount {
@@ -275,11 +275,18 @@ func LocustTest(locust_count string, hatch_rate string) {
 		}
 		time.Sleep(time.Second * 2)
 	}
-	fmt.Println("测试将持续60s...")
+	fmt.Println("测试将持续120s...")
+	time.Sleep(time.Second * 30)
+	fmt.Println("还有90s...")
+	time.Sleep(time.Second * 30)
+	fmt.Println("还有60s...")
 	time.Sleep(time.Second * 30)
 	fmt.Println("还有30s...")
-	endReplic := getReplic()
 	time.Sleep(time.Second * 30)
+
+	fmt.Println("本次测试结束，准备收集并存储数据...")
+
+	endReplic := getReplic()
 	LocustTestStop()
 
 	f, _ := os.Create("/home/administrator/test/locust/replic/" + locust_count + "C" + hatch_rate + "H.csv")
@@ -294,7 +301,7 @@ func LocustTest(locust_count string, hatch_rate string) {
 		log.Fatal(err)
 	}
 	fileTestV2(locust_count + "C" + hatch_rate + "H")
-
+	fmt.Println("数据存储成功!")
 }
 func LocustClose() {
 	if (!locustOpened()) {

@@ -198,12 +198,21 @@ func generateNginxReplic(replic int32) []byte {
 	probe.InitialDelaySeconds = int32(30)
 	probe.TimeoutSeconds = int32(1)
 
+	var resource classType.ResourceRequirements
+	resource.Limits = make(map[classType.ResourceName]string)
+	resource.Limits["cpu"] = "100m"
+	resource.Limits["memory"] = "200M"
+	resource.Requests = make(map[classType.ResourceName]string)
+	resource.Requests["cpu"] = "100m"
+	resource.Requests["memory"] = "200M"
+
 	var container classType.Container
 	container.Name = containerName
 	container.Image = image
 	container.Ports = Ports
 	container.VolumeMounts = vmslice
 	container.LivenessProbe = &probe
+	container.Resources = resource
 
 	var command []string
 	command = append(command, "/home/auto-reload-nginx.sh")

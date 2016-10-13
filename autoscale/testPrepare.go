@@ -16,7 +16,9 @@ func BuildNginx(num int32) {
 	//fmt.Println(url)
 	body := generateNginxReplic(num)
 	//fmt.Println(string(body))
-	resp := kubemark.InvokeRequest("POST", url, body)
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
+	resp := kubemark.InvokeRequestV2("POST", url, body, &client)
 	if (resp != nil) {
 		defer resp.Body.Close()
 		var v classType.ReplicationController
@@ -29,10 +31,10 @@ func BuildNginx(num int32) {
 	}
 
 	url = kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNamespaceUrl("default")
-	fmt.Println(url)
+	//fmt.Println(url)
 	body = generateNginxsvc()
 	//fmt.Println(string(body))
-	resp = kubemark.InvokeRequest("POST", url, body)
+	resp = kubemark.InvokeRequestV2("POST", url, body, &client)
 	if (resp != nil) {
 		defer resp.Body.Close()
 		var v classType.Service
@@ -47,7 +49,7 @@ func BuildNginx(num int32) {
 	for {
 		count := int32(0)
 		url := kubemark.DestinationServer_Test2 + kubemark.GeneratePodNamespaceUrl("default")
-		resp := kubemark.InvokeRequest("GET", url, nil)
+		resp := kubemark.InvokeRequestV2("GET", url, nil, &client)
 		if (resp != nil) {
 			defer resp.Body.Close()
 			var v classType.PodList

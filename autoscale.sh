@@ -4,4 +4,4 @@
 IP=192.168.6.10
 kubectl=/home/administrator/kubernetes/cluster/ubuntu/binaries/kubectl
 
-ssh ${IP} "${kubectl} autoscale rc nginx --max=9 --min=1 --cpu-percent=80"
+ssh ${IP} "${kubectl} autoscale rc nginx --max=9 --min=1 --cpu-percent=70"

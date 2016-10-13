@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 	"github.com/wy2745/kubernetes-deployment-tool/locust"
-	"bufio"
 )
 
 func main() {
@@ -58,11 +57,7 @@ func main() {
 	case "-l":
 		replic, _ := strconv.Atoi(os.Args[2])
 		autoscale.BuildNginx(int32(replic))
-		locust.GetUserName()
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Scan()
-		scanner.Text()
-		//locust.LocustTest(os.Args[3], os.Args[4])
+		locust.LocustTest(os.Args[3], os.Args[4])
 		autoscale.DestoryNginx()
 	default:
 		fmt.Println("参数输入错误")

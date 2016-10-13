@@ -235,7 +235,7 @@ func LocustParaSet(scanner *bufio.Scanner) {
 	}()
 }
 
-func GetUserName() {
+func getUserNum() int {
 	tr := http.Transport{DisableKeepAlives:false}
 	client := http.Client{Transport:&tr}
 	req, _ := http.NewRequest("GET", requestStatUrl, nil)
@@ -248,9 +248,9 @@ func GetUserName() {
 			fmt.Print(err)
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		fmt.Println(v)
+		return v.User_count
 	}
-
+	return 0
 }
 
 func LocustTest(locust_count string, hatch_rate string) {
@@ -268,8 +268,17 @@ func LocustTest(locust_count string, hatch_rate string) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
 	fmt.Println("测试启动")
-	fmt.Println("测试将持续60s")
+	for {
+		if getUserNum() == locust_count {
+			break
+		}
+		time.Sleep(time.Second * 2)
+	}
+	fmt.Println("测试将持续60s...")
+	time.Sleep(time.Second * 30)
+	fmt.Println("还有30s...")
 	endReplic := getReplic()
+	time.Sleep(time.Second * 30)
 	LocustTestStop()
 
 	f, _ := os.Create("/home/administrator/test/locust/replic/" + locust_count + "C" + hatch_rate + "H.csv")

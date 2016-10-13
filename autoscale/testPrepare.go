@@ -200,10 +200,10 @@ func generateNginxReplic(replic int32) []byte {
 
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
-	resource.Limits["cpu"] = "100m"
+	resource.Limits["cpu"] = "200m"
 	resource.Limits["memory"] = "200M"
 	resource.Requests = make(map[classType.ResourceName]string)
-	resource.Requests["cpu"] = "100m"
+	resource.Requests["cpu"] = "200m"
 	resource.Requests["memory"] = "200M"
 
 	var container classType.Container

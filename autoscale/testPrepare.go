@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"net/http"
+	"time"
 )
 
 func BuildNginx(num int32) {
@@ -76,14 +78,17 @@ func BuildNginx(num int32) {
 func DestoryNginx() {
 	replicName := "nginx"
 	svcName := "nginx-svc"
+
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
 	url := kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNameUrl("default", svcName)
-	kubemark.InvokeRequest("DELETE", url, nil)
+	kubemark.InvokeRequestV2("DELETE", url, nil, &client)
 
 	url = kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNameUrl("default", replicName)
-	kubemark.InvokeRequest("DELETE", url, nil)
+	kubemark.InvokeRequestV2("DELETE", url, nil, &client)
 
 	url = kubemark.DestinationServer_Test2 + kubemark.GeneratePodNamespaceUrl("default")
-	resp := kubemark.InvokeRequest("GET", url, nil)
+	resp := kubemark.InvokeRequestV2("GET", url, nil, &client)
 	if (resp != nil) {
 		defer resp.Body.Close()
 		var v classType.PodList
@@ -92,10 +97,41 @@ func DestoryNginx() {
 			fmt.Print(err)
 		}
 		jsonParse.JsonUnmarsha(body, &v)
-		for _, pod := range v.Items {
+		var clients []http.Client
+		for i := 0; i < len(v.Items); i++ {
+			tr := http.Transport{DisableKeepAlives:false}
+			clienttmp := http.Client{Transport:&tr}
+			clients = append(clients, clienttmp)
+		}
+		for index, pod := range v.Items {
 			if pod.Labels["name"] == replicName {
 				url = kubemark.DestinationServer_Test2 + kubemark.GeneratePodNameUrl("default", pod.Name)
-				kubemark.InvokeRequest("DELETE", url, nil)
+				kubemark.InvokeRequestV2("DELETE", url, nil, &(clients[index]))
+			}
+		}
+		for {
+			url = kubemark.DestinationServer_Test2 + kubemark.GeneratePodNamespaceUrl("default")
+			resp = kubemark.InvokeRequestV2("GET", url, nil, &client)
+			if (resp != nil) {
+				defer resp.Body.Close()
+				var v classType.PodList
+				body, err := ioutil.ReadAll(resp.Body)
+				if (err != nil) {
+					fmt.Print(err)
+				}
+				jsonParse.JsonUnmarsha(body, &v)
+				var complete = true
+				for _, pod := range v.Items {
+					if pod.Labels["name"] == replicName {
+						complete = false
+						break
+					}
+				}
+				if complete == true {
+					return
+				} else {
+					time.Sleep(time.Second * 1)
+				}
 			}
 		}
 	}

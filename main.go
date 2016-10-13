@@ -56,7 +56,7 @@ func main() {
 		fmt.Println("ok")
 	case "-l":
 		replic, _ := strconv.Atoi(os.Args[2])
-		cpu, _ := strconv.Atoi(os.Args[3])
+		cpu := os.Args[3]
 		autoscale.BuildNginx(int32(replic), cpu)
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()

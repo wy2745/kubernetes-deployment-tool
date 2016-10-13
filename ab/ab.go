@@ -11,7 +11,7 @@ const (
 	getfile string = "api/v1/pods"
 	getfile2 string = "api/v1/nodes"
 	desroot string = "/home/administrator/test/ab/"
-	tmpurl string = node + ":" + port + "/" + getfile2
+	tmpurl string = node + ":" + port + "/" + getfile
 )
 
 func Abtest(name string, count string) {

@@ -242,10 +242,12 @@ func GetUserName() {
 	resp, _ := client.Do(req)
 	if (resp != nil) {
 		defer resp.Body.Close()
+		var v requestStat
 		body, err := ioutil.ReadAll(resp.Body)
 		if (err != nil) {
 			fmt.Print(err)
 		}
+		jsonParse.JsonUnmarsha(body, &v)
 		fmt.Println(string(body))
 	}
 

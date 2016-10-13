@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-func BuildNginx(num int32) {
+func BuildNginx(num int32, cpu string) {
 	url := kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNamespaceUrl("default")
 	//fmt.Println(url)
-	body := generateNginxReplic(num)
+	body := generateNginxReplic(num, cpu)
 	//fmt.Println(string(body))
 	tr := http.Transport{DisableKeepAlives:false}
 	client := http.Client{Transport:&tr}
@@ -70,11 +70,12 @@ func BuildNginx(num int32) {
 			}
 		}
 		if count == num {
+			cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/autoscale.sh")
+			cmd.Output()
 			return
 		}
 	}
-	cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/autoscale.sh")
-	cmd.Output()
+
 }
 
 func DestoryNginx() {
@@ -139,7 +140,7 @@ func DestoryNginx() {
 	}
 }
 
-func generateNginxReplic(replic int32) []byte {
+func generateNginxReplic(replic int32, cpu string) []byte {
 	var name = "nginx"
 	var image = "ymqytw/nginxhttps:1.5"
 	var containerName = "nginxhttps"
@@ -200,10 +201,10 @@ func generateNginxReplic(replic int32) []byte {
 
 	var resource classType.ResourceRequirements
 	resource.Limits = make(map[classType.ResourceName]string)
-	resource.Limits["cpu"] = "200m"
+	resource.Limits["cpu"] = cpu
 	resource.Limits["memory"] = "200M"
 	resource.Requests = make(map[classType.ResourceName]string)
-	resource.Requests["cpu"] = "200m"
+	resource.Requests["cpu"] = cpu
 	resource.Requests["memory"] = "200M"
 
 	var container classType.Container

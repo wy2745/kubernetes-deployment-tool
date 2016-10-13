@@ -268,8 +268,9 @@ func LocustTest(locust_count string, hatch_rate string) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
 	fmt.Println("测试启动")
+	usercount, _ := strconv.Atoi(locust_count)
 	for {
-		if getUserNum() == locust_count {
+		if getUserNum() == usercount {
 			break
 		}
 		time.Sleep(time.Second * 2)

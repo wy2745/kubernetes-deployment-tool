@@ -24,9 +24,9 @@ do
     eloadfileName=eloadbalance${podnum}p
 
 
-    ssh ${teserIP} "cd test && ab -w -n 100000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
+    ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
     sleep 3
-    ssh ${teserIP} "cd test && ab -w -n 50000 -c 50 -e ${apifileName}.csv -g ${apifileName}.gnp ${apiUrl} > ${apifileName}.html"
+    ssh ${teserIP} "cd test && ab -n 50000 -c 50 -e ${apifileName}.csv -g ${apifileName}.gnp ${apiUrl} > ${apifileName}.html"
 
     arr=($(kubectl get pods | grep nginx | awk '{print $1};' | tail -n +1))
     server=""
@@ -36,7 +36,7 @@ do
         done
     ssh ${nginxIp} "cd /etc/nginx/conf.d && ./nginxProxy.sh \"${server}\" && echo incongruous | sudo -S service nginx restart"
 
-    ssh ${teserIP} "cd test && ab -w -n 100000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
+    ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
     sleep 3
     done
 

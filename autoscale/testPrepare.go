@@ -200,7 +200,7 @@ func DestoryNginx() {
 						break
 					}
 				}
-				fmt.Println(complete)
+				//fmt.Println(complete)
 				if complete == true {
 					return
 				} else {

@@ -24,19 +24,25 @@ do
     eloadfileName=eloadbalance${podnum}p
 
 
+    echo "进行server的ab测试"
     ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
     sleep 3
+    echo "测试完成"
+    echo "进行apiserver的ab测试"
     ssh ${teserIP} "cd test && ab -n 50000 -c 50 -e ${apifileName}.csv -g ${apifileName}.gnp ${apiUrl} > ${apifileName}.html"
-
+    echo "测试完成"
     arr=($(kubectl get pods | grep nginx | awk '{print $1};' | tail -n +1))
     server=""
     for s in ${arr}
     do
         server+="\tserver "$(kubectl describe pod ${s} | grep Node | awk '{{split($2,a,"/" ); print a[1]}}')":8888;\n"
         done
+    echo "对nginx进行配置"
     ssh ${nginxIp} "cd /etc/nginx/conf.d && ./nginxProxy.sh \"${server}\" && echo incongruous | sudo -S service nginx restart"
-
+    echo "配置完成"
+    echo "进行外部loadbalancer的ab测试"
     ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
+    echo "测试完成"
     sleep 3
     done
 

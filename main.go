@@ -63,6 +63,10 @@ func main() {
 		scanner.Text()
 		//locust.LocustTest(os.Args[3], os.Args[4])
 		autoscale.DestoryNginx()
+	case "-ldt":
+		cpu := os.Args[2]
+		autoscale.BuildNginxForLB(int32(0), cpu)
+
 	default:
 		fmt.Println("参数输入错误")
 	}

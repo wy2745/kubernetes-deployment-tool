@@ -77,6 +77,72 @@ func BuildNginx(num int32, cpu string) {
 	}
 
 }
+func BuildNginxForLB(num int32, cpu string) {
+	url := kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNamespaceUrl("default")
+	//fmt.Println(url)
+	body := generateNginxReplic(num, cpu)
+	//fmt.Println(string(body))
+	tr := http.Transport{DisableKeepAlives:false}
+	client := http.Client{Transport:&tr}
+	resp := kubemark.InvokeRequestV2("POST", url, body, &client)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.ReplicationController
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		//fmt.Println(v)
+	}
+
+	url = kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNamespaceUrl("default")
+	//fmt.Println(url)
+	body = generateNginxsvc()
+	//fmt.Println(string(body))
+	resp = kubemark.InvokeRequestV2("POST", url, body, &client)
+	if (resp != nil) {
+		defer resp.Body.Close()
+		var v classType.Service
+		body, err := ioutil.ReadAll(resp.Body)
+		if (err != nil) {
+			fmt.Print(err)
+		}
+		jsonParse.JsonUnmarsha(body, &v)
+		//fmt.Println(v)
+	}
+
+	for {
+		count := int32(0)
+		url := kubemark.DestinationServer_Test2 + kubemark.GeneratePodNamespaceUrl("default")
+		resp := kubemark.InvokeRequestV2("GET", url, nil, &client)
+		if (resp != nil) {
+			defer resp.Body.Close()
+			var v classType.PodList
+			body, err := ioutil.ReadAll(resp.Body)
+			if (err != nil) {
+				fmt.Print(err)
+			}
+			jsonParse.JsonUnmarsha(body, &v)
+			for _, pod := range v.Items {
+				if pod.Labels["name"] == "nginx" && pod.Status.Phase == "Running" {
+					for _, pc := range pod.Status.Conditions {
+						if pc.Type == "Ready" && pc.Status == "True" {
+							count ++
+						}
+					}
+
+				}
+			}
+		}
+		if count == num {
+			cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/locustTest.sh")
+			cmd.Output()
+			return
+		}
+	}
+
+}
 
 func DestoryNginx() {
 	replicName := "nginx"
@@ -282,4 +348,6 @@ func generateNginxsvc() []byte {
 	//fmt.Print(string(b))
 	return b
 }
+
+
 

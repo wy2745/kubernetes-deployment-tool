@@ -24,6 +24,7 @@ do
     eloadfileName=eloadbalance${podnum}p
 
 
+    sleep 10
     echo "进行server的ab测试"
     ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
     sleep 60

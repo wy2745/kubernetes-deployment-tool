@@ -138,7 +138,7 @@ func BuildNginxForLB(num int32, cpu string) {
 		}
 		fmt.Println(count)
 		if count == num {
-			cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/locustTest.sh")
+			cmd := exec.Command("/bin/sh", "-c", "~/go/src/github.com/wy2745/kubernetes-deployment-tool/loadBalanceTest.sh")
 			cmd.Output()
 			return
 		}

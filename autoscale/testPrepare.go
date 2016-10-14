@@ -78,6 +78,7 @@ func BuildNginx(num int32, cpu string) {
 
 }
 func BuildNginxForLB(num int32, cpu string) {
+
 	url := kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNamespaceUrl("default")
 	//fmt.Println(url)
 	body := generateNginxReplic(num, cpu)

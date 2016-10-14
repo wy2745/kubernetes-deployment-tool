@@ -64,6 +64,7 @@ func main() {
 		//locust.LocustTest(os.Args[3], os.Args[4])
 		autoscale.DestoryNginx()
 	case "-ldt":
+		autoscale.DestoryNginx()
 		cpu := os.Args[2]
 		autoscale.BuildNginxForLB(int32(0), cpu)
 

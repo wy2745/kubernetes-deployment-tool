@@ -66,6 +66,7 @@ func main() {
 	case "-ldt":
 		autoscale.DestoryNginx()
 		cpu := os.Args[2]
+		fmt.Println("ok")
 		autoscale.BuildNginxForLB(int32(0), cpu)
 
 	default:

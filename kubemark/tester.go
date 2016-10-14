@@ -35,9 +35,9 @@ func InvokeRequestV2(method string, url string, body []byte, client *http.Client
 		req.Header.Set("Content-Type", "application/json")
 	}
 	resp, err := (*client).Do(req)
-	//fmt.Println(resp.Header)
-	//fmt.Println(resp.Status)
-	//fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header)
+	fmt.Println(resp.Status)
+	fmt.Println(resp.StatusCode)
 	if err != nil {
 		fmt.Print(err)
 	}

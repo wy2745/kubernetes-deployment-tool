@@ -42,6 +42,7 @@ do
     echo "对nginx进行配置"
     ssh ${nginxIp} "cd /etc/nginx/conf.d && ./nginxProxy.sh \"${server}\" && echo incongruous | sudo -S service nginx restart"
     echo "配置完成"
+    sleep 10
     echo "进行外部loadbalancer的ab测试"
     ssh ${teserIP} "cd test && ab -k -n 100000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
     sleep 60

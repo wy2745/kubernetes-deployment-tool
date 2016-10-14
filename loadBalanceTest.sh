@@ -26,7 +26,7 @@ do
 
     sleep 10
     echo "进行server的ab测试"
-    ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
+    ssh ${teserIP} "cd test && ab -n 50000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
     sleep 60
     echo "测试完成"
     echo "进行apiserver的ab测试"
@@ -43,7 +43,7 @@ do
     ssh ${nginxIp} "cd /etc/nginx/conf.d && ./nginxProxy.sh \"${server}\" && echo incongruous | sudo -S service nginx restart"
     echo "配置完成"
     echo "进行外部loadbalancer的ab测试"
-    ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
+    ssh ${teserIP} "cd test && ab -n 50000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
     sleep 60
     echo "测试完成"
     done

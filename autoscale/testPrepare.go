@@ -179,8 +179,10 @@ func generateNginxReplic(replic int32, cpu string) []byte {
 	var Ports []classType.ContainerPort
 	var port classType.ContainerPort
 	port.ContainerPort = int32(443)
+	port.HostPort = int32(4443)
 	Ports = append(Ports, port)
 	port.ContainerPort = int32(80)
+	port.HostPort = int32(8888)
 	Ports = append(Ports, port)
 
 	var volumnMount classType.VolumeMount

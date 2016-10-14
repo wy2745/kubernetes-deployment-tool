@@ -26,10 +26,11 @@ do
 
     echo "进行server的ab测试"
     ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
-    sleep 3
+    sleep 60
     echo "测试完成"
     echo "进行apiserver的ab测试"
     ssh ${teserIP} "cd test && ab -n 50000 -c 50 -e ${apifileName}.csv -g ${apifileName}.gnp ${apiUrl} > ${apifileName}.html"
+    sleep 60
     echo "测试完成"
     arr=($(kubectl get pods | grep nginx | awk '{print $1};' | tail -n +1))
     server=""
@@ -42,8 +43,8 @@ do
     echo "配置完成"
     echo "进行外部loadbalancer的ab测试"
     ssh ${teserIP} "cd test && ab -n 100000 -c 50 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
+    sleep 60
     echo "测试完成"
-    sleep 3
     done
 
 echo "测试完成,准备删除rc"

@@ -58,11 +58,9 @@ func main() {
 		replic, _ := strconv.Atoi(os.Args[2])
 		cpu := os.Args[3]
 		autoscale.BuildNginx(int32(replic), cpu)
-		fmt.Println("输入一个字符")
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		scanner.Text()
-		fmt.Println("可以")
 		//locust.LocustTest(os.Args[3], os.Args[4])
 		autoscale.DestoryNginx()
 	default:

@@ -85,9 +85,7 @@ func DestoryNginx() {
 	tr := http.Transport{DisableKeepAlives:false}
 	client := http.Client{Transport:&tr}
 	url := kubemark.DestinationServer_Test2 + kubemark.GenerateServiceListNameUrl("default", svcName)
-	fmt.Println(url)
 	kubemark.InvokeRequestV2("DELETE", url, nil, &client)
-	fmt.Println("ok")
 
 	url = kubemark.DestinationServer_Test2 + kubemark.GenerateReplicationControllerNameUrl("default", replicName)
 	kubemark.InvokeRequestV2("DELETE", url, nil, &client)

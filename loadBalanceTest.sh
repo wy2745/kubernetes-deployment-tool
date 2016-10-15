@@ -29,7 +29,7 @@ do
     sleep 10
     echo "进行server的ab测试"
     ssh ${teserIP} "cd ${fileroot} && ab -k -n 100000 -c 20 -e ${servicefileName}.csv -g ${servicefileName}.gnp ${serviceUrl} > ${servicefileName}.html"
-    ssh ${serviceIP} "echo incongruous | sudo -S reboot"
+    ssh ${serviceIP} "cd / && echo incongruous | sudo -S reboot"
     sleep 60
     echo "测试完成"
     echo "进行apiserver的ab测试"
@@ -48,7 +48,7 @@ do
     sleep 10
     echo "进行外部loadbalancer的ab测试"
     ssh ${teserIP} "cd ${fileroot} && ab -k -n 100000 -c 20 -e ${eloadfileName}.csv -g ${eloadfileName}.gnp ${eloadbUrl} > ${eloadfileName}.html"
-    ssh ${nginxIp} "echo incongruous | sudo -S reboot"
+    ssh ${nginxIp} "cd / && echo incongruous | sudo -S reboot"
 
     sleep 60
     echo "测试完成"

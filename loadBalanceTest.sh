@@ -3,10 +3,10 @@
 echo "开始测试"
 
 teserIP=192.168.6.15
-nginxIp=192.168.6.14
+nginxIp=192.168.6.31
 serviceUrl=http://192.168.6.22:30080/index.html
 apiUrl=http://192.168.6.10:8080/api/v1/proxy/namespaces/default/services/nginx-svc:80/index.html
-eloadbUrl=http://192.168.6.14/index.html
+eloadbUrl=http://192.168.6.31/index.html
 fileroot=lbtest
 
 kubectl=/home/administrator/kubernetes/cluster/ubuntu/binaries/kubectl

@@ -288,9 +288,9 @@ func generateNginxReplic(replic int32, cpu string) []byte {
 	container.LivenessProbe = &probe
 	container.Resources = resource
 
-	var command []string
-	command = append(command, "/home/auto-reload-nginx.sh")
-	container.Command = command
+	//var command []string
+	//command = append(command, "/home/auto-reload-nginx.sh")
+	//container.Command = command
 
 	slice := []classType.Container{container}
 	var podTemplateSpec classType.PodTemplateSpec
